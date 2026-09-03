@@ -1,0 +1,134 @@
+<section class="dashboard">
+  <div class="dashboard-heading">
+    <div>
+      <span class="section-kicker">COMMUNICATION COMMAND CENTER</span>
+
+      <h1>System Overview</h1>
+
+      <p>Unified monitoring across your connected communication accounts.</p>
+    </div>
+
+    <div class="system-core">
+      <div class="core-ring ring-one"></div>
+      <div class="core-ring ring-two"></div>
+      <div class="core-center"></div>
+
+      <div class="core-text">
+        <strong>ACTIVE</strong>
+        <span>MONITORING</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span class="summary-label">TOTAL UNREAD</span>
+
+      <strong>{{ totalUnread }}</strong>
+
+      <span class="summary-meta">Across all connected accounts</span>
+    </article>
+
+    <article class="summary-card critical">
+      <span class="summary-label">IMPORTANT</span>
+
+      <strong>{{ totalImportant }}</strong>
+
+      <span class="summary-meta">Requires your attention</span>
+    </article>
+
+    <article class="summary-card">
+      <span class="summary-label">CONNECTED</span>
+
+      <strong>{{ accounts.length }}</strong>
+
+      <span class="summary-meta">Communication sources</span>
+    </article>
+
+    <article class="summary-card">
+      <span class="summary-label">SYSTEM</span>
+
+      <strong class="system-value">ONLINE</strong>
+
+      <span class="summary-meta">Realtime monitoring active</span>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+    <section class="panel accounts-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-kicker">CONNECTED NETWORK</span>
+          <h2>Accounts</h2>
+        </div>
+
+        <span class="panel-count">{{ accounts.length }}</span>
+      </div>
+
+      <div class="account-list">
+        <article class="account-item" *ngFor="let account of accounts">
+          <div class="account-icon">
+            <span>{{ account.provider.charAt(0) }}</span>
+          </div>
+
+          <div class="account-info">
+            <strong>{{ account.name }}</strong>
+            <span>{{ account.provider }}</span>
+          </div>
+
+          <div class="account-stats">
+            <div>
+              <strong>{{ account.unread }}</strong>
+              <span>Unread</span>
+            </div>
+
+            <div>
+              <strong>{{ account.important }}</strong>
+              <span>Priority</span>
+            </div>
+          </div>
+
+          <span class="account-status" [class.warning]="account.status === 'warning'"></span>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel activity-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-kicker">RECENT SIGNALS</span>
+          <h2>Incoming Activity</h2>
+        </div>
+
+        <span class="activity-live">
+          <span></span>
+          LIVE
+        </span>
+      </div>
+
+      <div class="message-list">
+        <article
+          class="message-item"
+          *ngFor="let message of recentMessages"
+          [class.important]="message.important"
+        >
+          <div class="message-marker"></div>
+
+          <div class="message-body">
+            <div class="message-top">
+              <strong>{{ message.sender }}</strong>
+              <span>{{ message.time }}</span>
+            </div>
+
+            <p>{{ message.subject }}</p>
+
+            <div class="message-meta">
+              <span>{{ message.provider }}</span>
+              <span>{{ message.account }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</section>

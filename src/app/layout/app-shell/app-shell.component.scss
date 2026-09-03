@@ -1,0 +1,39 @@
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  background:
+    radial-gradient(circle at 70% 10%, rgba(77, 231, 255, 0.06), transparent 30%), #05090d;
+  color: #edfaff;
+}
+
+.app-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+  padding: 28px;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 84px 1fr;
+  }
+
+  .app-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    display: block;
+  }
+
+  .app-content {
+    padding: 16px;
+  }
+}

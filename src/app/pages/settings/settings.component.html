@@ -1,0 +1,45 @@
+<section class="settings-page">
+  <div class="page-heading">
+    <span>SYSTEM CONFIGURATION</span>
+
+    <h1>Settings</h1>
+
+    <p>Configure Notificator desktop behavior.</p>
+  </div>
+
+  <div class="settings-panel">
+    <div class="setting-row">
+      <div>
+        <strong>Launch at Windows startup</strong>
+
+        <span> Automatically start Notificator when you sign into Windows. </span>
+      </div>
+
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="desktop.autostartEnabled()"
+          (change)="toggleAutostart($event)"
+        />
+
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <strong>Desktop notifications</strong>
+        <span> Test native Windows notifications. </span>
+      </div>
+      <button class="hud-button" type="button" (click)="testNotification()">TEST SIGNAL</button>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <strong>Critical alert test</strong>
+        <span> Simulate an incoming priority call. </span>
+      </div>
+      <button class="hud-button" type="button" (click)="simulateCall()">SIMULATE CALL</button>
+    </div>
+  </div>
+</section>

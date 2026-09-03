@@ -1,0 +1,30 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="eyebrow"> NOTIFICATOR SYSTEM </span>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      <span>ONLINE</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="user-info">
+      <span>
+        {{ auth.currentUser()?.displayName || 'OPERATOR' }}
+      </span>
+
+      <small>
+        {{ auth.currentUser()?.email }}
+      </small>
+    </div>
+
+    <div class="sync-status">
+      <span class="sync-label"> SYNC STATUS </span>
+
+      <strong> ALL SYSTEMS ACTIVE </strong>
+    </div>
+
+    <button class="profile-button" type="button" (click)="logout()" title="Sign out">MV</button>
+  </div>
+</header>

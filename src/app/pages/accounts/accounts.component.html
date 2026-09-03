@@ -1,0 +1,208 @@
+<section class="accounts-page">
+  <div class="page-heading">
+    <div>
+      <span class="page-kicker"> COMMUNICATION NETWORK </span>
+
+      <h1>Connected Accounts</h1>
+
+      <p>Connect the communication accounts that Notificator should monitor.</p>
+    </div>
+
+    <div class="network-status">
+      <span></span>
+
+      {{ accounts.length }}
+      CONNECTED
+    </div>
+  </div>
+
+  <section class="provider-section">
+    <div class="section-heading">
+      <div>
+        <span>AVAILABLE PROVIDERS</span>
+
+        <h2>Add communication source</h2>
+      </div>
+    </div>
+
+    <div class="provider-grid">
+      @for (provider of providers; track provider.id) {
+        <article class="provider-card" [class.disabled]="provider.status === 'coming-soon'">
+          <div class="provider-icon" [attr.data-provider]="provider.id">
+            @switch (provider.id) {
+              @case ('gmail') {
+                G
+              }
+
+              @case ('outlook') {
+                O
+              }
+
+              @case ('whatsapp') {
+                W
+              }
+            }
+          </div>
+
+          <div class="provider-content">
+            <div class="provider-title">
+              <h3>
+                {{ provider.name }}
+              </h3>
+
+              @if (provider.status === 'coming-soon') {
+                <span> COMING SOON </span>
+              }
+            </div>
+
+            <p>
+              {{ provider.description }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            [disabled]="provider.status === 'coming-soon' || connectingProvider() === provider.id"
+            (click)="connect(provider)"
+          >
+            @if (connectingProvider() === provider.id) {
+              CONNECTING...
+            } @else if (provider.status === 'coming-soon') {
+              UNAVAILABLE
+            } @else {
+              CONNECT
+            }
+          </button>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="connected-section">
+    <div class="section-heading">
+      <div>
+        <span>ACTIVE CONNECTIONS</span>
+
+        <h2>Monitored accounts</h2>
+      </div>
+
+      <span class="count">
+        {{ accounts.length }}
+      </span>
+    </div>
+
+    @if (accounts.length === 0) {
+      <div class="empty-state">
+        <div class="empty-core">
+          <span></span>
+        </div>
+
+        <strong> NO ACCOUNTS CONNECTED </strong>
+
+        <p>Connect Gmail or Outlook above to begin monitoring messages.</p>
+      </div>
+    } @else {
+      <div class="account-list">
+        @for (account of accounts; track account.id) {
+          <article class="account-row">
+            <div class="account-provider">
+              {{ account.provider.charAt(0) }}
+            </div>
+
+            <div class="account-details">
+              <strong>
+                {{ account.name }}
+              </strong>
+
+              <span>
+                {{ account.email }}
+              </span>
+            </div>
+
+            <div class="account-stat">
+              <strong>
+                {{ account.unread }}
+              </strong>
+
+              <span>UNREAD</span>
+            </div>
+
+            <div class="account-stat">
+              <strong>
+                {{ account.important }}
+              </strong>
+
+              <span>PRIORITY</span>
+            </div>
+
+            <div class="connection-state">
+              <span></span>
+              CONNECTED
+            </div>
+
+            <button class="disconnect" type="button" (click)="disconnect(account)">
+              DISCONNECT
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>
+@if (gmailMessages.length > 0) {
+  <section class="connected-section">
+    <div class="section-heading">
+      <div>
+        <span>LIVE GMAIL DATA</span>
+
+        <h2>Recent inbox messages</h2>
+      </div>
+
+      <span class="count">
+        {{ gmailMessages.length }}
+      </span>
+    </div>
+
+    <div class="gmail-message-list">
+      @for (message of gmailMessages; track message.id) {
+        <article class="gmail-message" [class.unread]="!message.isRead">
+          <div class="message-state">
+            @if (!message.isRead) {
+              <span></span>
+            }
+          </div>
+
+          <div class="message-sender">
+            <strong>
+              {{ message.senderName }}
+            </strong>
+
+            <span>
+              {{ message.senderAddress }}
+            </span>
+          </div>
+
+          <div class="message-content">
+            <strong>
+              {{ message.subject }}
+            </strong>
+
+            <p>
+              {{ message.snippet }}
+            </p>
+          </div>
+
+          <div class="message-flags">
+            @if (message.isImportant) {
+              <span> PRIORITY </span>
+            }
+
+            @if (message.isStarred) {
+              <span> STARRED </span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+}

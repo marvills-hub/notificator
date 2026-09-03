@@ -1,0 +1,533 @@
+.accounts-page {
+  width: 100%;
+}
+
+.page-heading {
+  margin-bottom: 28px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.page-kicker,
+.section-heading span {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #4de7ff;
+}
+
+.page-heading h1 {
+  margin: 8px 0;
+  font-size: 38px;
+  font-weight: 500;
+}
+
+.page-heading p {
+  margin: 0;
+  color: #73929d;
+}
+
+.network-status {
+  padding: 9px 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  border: 1px solid rgba(77, 231, 255, 0.12);
+
+  border-radius: 6px;
+
+  background: rgba(77, 231, 255, 0.03);
+
+  color: #78949d;
+
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+
+.network-status span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #4dffae;
+
+  box-shadow: 0 0 10px rgba(77, 255, 174, 0.7);
+}
+
+.provider-section,
+.connected-section {
+  margin-bottom: 20px;
+
+  border: 1px solid rgba(77, 231, 255, 0.1);
+
+  border-radius: 10px;
+
+  overflow: hidden;
+
+  background: rgba(8, 18, 24, 0.74);
+}
+
+.section-heading {
+  min-height: 76px;
+
+  padding: 18px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid rgba(77, 231, 255, 0.08);
+}
+
+.section-heading h2 {
+  margin: 5px 0 0;
+
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.count {
+  min-width: 34px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(77, 231, 255, 0.15);
+
+  border-radius: 5px;
+}
+
+.provider-grid {
+  padding: 16px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+.provider-card {
+  min-height: 235px;
+
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid rgba(77, 231, 255, 0.1);
+
+  border-radius: 8px;
+
+  background: linear-gradient(145deg, rgba(77, 231, 255, 0.035), transparent);
+}
+
+.provider-card.disabled {
+  opacity: 0.45;
+}
+
+.provider-icon {
+  width: 52px;
+  height: 52px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(77, 231, 255, 0.22);
+
+  border-radius: 50%;
+
+  background: rgba(77, 231, 255, 0.05);
+
+  color: #4de7ff;
+
+  font-size: 16px;
+}
+
+.provider-content {
+  margin-top: 18px;
+  flex: 1;
+}
+
+.provider-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.provider-title h3 {
+  margin: 0;
+
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.provider-title span {
+  font-size: 7px;
+  letter-spacing: 1px;
+
+  color: #ffc857;
+}
+
+.provider-content p {
+  margin: 9px 0 0;
+
+  font-size: 10px;
+  line-height: 1.7;
+
+  color: #617d86;
+}
+
+.provider-card button {
+  min-height: 40px;
+
+  border: 1px solid rgba(77, 231, 255, 0.18);
+
+  border-radius: 5px;
+
+  background: rgba(77, 231, 255, 0.05);
+
+  color: #4de7ff;
+
+  font-size: 8px;
+  letter-spacing: 1.5px;
+
+  cursor: pointer;
+}
+
+.provider-card button:hover:not(:disabled) {
+  background: rgba(77, 231, 255, 0.1);
+}
+
+.provider-card button:disabled {
+  cursor: default;
+}
+
+.empty-state {
+  min-height: 260px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.empty-core {
+  width: 72px;
+  height: 72px;
+
+  margin-bottom: 18px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px dashed rgba(77, 231, 255, 0.2);
+
+  border-radius: 50%;
+}
+
+.empty-core span {
+  width: 22px;
+  height: 22px;
+
+  border: 1px solid rgba(77, 231, 255, 0.4);
+
+  border-radius: 50%;
+
+  background: rgba(77, 231, 255, 0.07);
+}
+
+.empty-state strong {
+  font-size: 10px;
+  letter-spacing: 2px;
+
+  color: #7c989f;
+}
+
+.empty-state p {
+  max-width: 300px;
+
+  margin: 8px 0 0;
+
+  font-size: 10px;
+  line-height: 1.7;
+
+  color: #4f6972;
+}
+
+.account-list {
+  padding: 8px;
+}
+
+.account-row {
+  min-height: 78px;
+
+  padding: 12px;
+
+  display: grid;
+
+  grid-template-columns:
+    44px minmax(0, 1fr)
+    80px 80px 100px auto;
+
+  align-items: center;
+
+  gap: 14px;
+
+  border-bottom: 1px solid rgba(77, 231, 255, 0.06);
+}
+
+.account-row:last-child {
+  border-bottom: 0;
+}
+
+.account-provider {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(77, 231, 255, 0.17);
+
+  border-radius: 50%;
+
+  color: #4de7ff;
+}
+
+.account-details,
+.account-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-details strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.account-details span {
+  margin-top: 4px;
+
+  font-size: 9px;
+  color: #5c7680;
+}
+
+.account-stat strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.account-stat span {
+  margin-top: 3px;
+
+  font-size: 7px;
+  color: #526b74;
+}
+
+.connection-state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 7px;
+  letter-spacing: 1px;
+
+  color: #4dffae;
+}
+
+.connection-state span {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #4dffae;
+
+  box-shadow: 0 0 8px rgba(77, 255, 174, 0.6);
+}
+
+.disconnect {
+  min-height: 34px;
+
+  padding: 0 12px;
+
+  border: 1px solid rgba(255, 83, 100, 0.15);
+
+  border-radius: 4px;
+
+  background: rgba(255, 83, 100, 0.04);
+
+  color: #ff7180;
+
+  font-size: 7px;
+  letter-spacing: 1px;
+
+  cursor: pointer;
+}
+
+@media (max-width: 1050px) {
+  .provider-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-row {
+    grid-template-columns:
+      44px minmax(0, 1fr)
+      auto;
+  }
+
+  .account-stat,
+  .connection-state {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-heading {
+    flex-direction: column;
+  }
+
+  .page-heading h1 {
+    font-size: 30px;
+  }
+}
+.gmail-message-list {
+  padding: 8px;
+}
+
+.gmail-message {
+  min-height: 84px;
+
+  padding: 14px 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    14px
+    190px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 14px;
+
+  border-bottom: 1px solid rgba(77, 231, 255, 0.06);
+
+  opacity: 0.72;
+}
+
+.gmail-message:last-child {
+  border-bottom: 0;
+}
+
+.gmail-message.unread {
+  opacity: 1;
+
+  background: rgba(77, 231, 255, 0.025);
+}
+
+.message-state {
+  display: grid;
+  place-items: center;
+}
+
+.message-state span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #4de7ff;
+
+  box-shadow: 0 0 10px rgba(77, 231, 255, 0.6);
+}
+
+.message-sender,
+.message-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.message-sender strong,
+.message-content strong {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.message-sender span {
+  margin-top: 4px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #526d76;
+
+  font-size: 8px;
+}
+
+.message-content p {
+  margin: 5px 0 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #607c85;
+
+  font-size: 9px;
+}
+
+.message-flags {
+  display: flex;
+  gap: 6px;
+}
+
+.message-flags span {
+  padding: 4px 6px;
+
+  border: 1px solid rgba(255, 200, 87, 0.16);
+
+  border-radius: 3px;
+
+  color: #ffc857;
+
+  font-size: 6px;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 900px) {
+  .gmail-message {
+    grid-template-columns:
+      12px
+      minmax(0, 1fr);
+  }
+
+  .message-content {
+    grid-column: 2;
+  }
+
+  .message-flags {
+    display: none;
+  }
+}

@@ -1,0 +1,35 @@
+<div class="critical-alert">
+  <div class="hud-lines">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <div class="call-core">
+    <div class="ring ring-one"></div>
+    <div class="ring ring-two"></div>
+    <div class="ring ring-three"></div>
+
+    <div class="phone">☎</div>
+  </div>
+
+  <span class="critical-label"> PRIORITY COMMUNICATION </span>
+
+  <h1>INCOMING CALL</h1>
+
+  <strong class="caller">
+    {{ caller }}
+  </strong>
+
+  <span class="provider">
+    {{ provider }}
+  </span>
+
+  <div class="actions">
+    <button class="answer" type="button" (click)="answer()">ACCEPT</button>
+
+    <button class="dismiss" type="button" (click)="dismiss()">IGNORE</button>
+  </div>
+
+  <span class="system-message"> NOTIFICATOR PRIORITY ALERT </span>
+</div>

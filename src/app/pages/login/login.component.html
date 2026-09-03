@@ -1,0 +1,52 @@
+<section class="login-page">
+  <div class="login-glow glow-one"></div>
+  <div class="login-glow glow-two"></div>
+
+  <div class="login-card">
+    <div class="login-core">
+      <span class="ring ring-one"></span>
+      <span class="ring ring-two"></span>
+      <span class="center"></span>
+    </div>
+
+    <span class="system-label"> NOTIFICATOR SYSTEM </span>
+
+    <h1>Access Terminal</h1>
+
+    <p>Sign in to your communication command center.</p>
+
+    <form [formGroup]="form" (ngSubmit)="login()">
+      <label>
+        <span>EMAIL</span>
+
+        <input type="email" formControlName="email" placeholder="you@example.com" />
+      </label>
+
+      <label>
+        <span>PASSWORD</span>
+
+        <input type="password" formControlName="password" placeholder="••••••••" />
+      </label>
+
+      @if (errorMessage()) {
+        <div class="error-message">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <button type="submit" [disabled]="loading()">
+        @if (loading()) {
+          AUTHENTICATING...
+        } @else {
+          ENTER SYSTEM
+        }
+      </button>
+    </form>
+
+    <div class="system-footer">
+      <span></span>
+      SECURE COMMUNICATION TERMINAL
+      <span></span>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,141 @@
+.settings-page {
+  width: 100%;
+}
+
+.page-heading {
+  margin-bottom: 28px;
+}
+
+.page-heading > span {
+  font-size: 9px;
+  letter-spacing: 2.2px;
+  color: #4de7ff;
+}
+
+.page-heading h1 {
+  margin: 8px 0;
+  font-size: 38px;
+  font-weight: 500;
+}
+
+.page-heading p {
+  margin: 0;
+  color: #73929d;
+}
+
+.settings-panel {
+  overflow: hidden;
+  border: 1px solid rgba(77, 231, 255, 0.11);
+  border-radius: 10px;
+  background: rgba(8, 18, 24, 0.78);
+}
+
+.setting-row {
+  min-height: 94px;
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border-bottom: 1px solid rgba(77, 231, 255, 0.07);
+}
+
+.setting-row:last-child {
+  border-bottom: 0;
+}
+
+.setting-row > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-row strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.setting-row div > span {
+  margin-top: 7px;
+  font-size: 10px;
+  color: #647f88;
+}
+
+.switch {
+  width: 48px;
+  height: 26px;
+  position: relative;
+}
+
+.switch input {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+
+  border: 1px solid rgba(77, 231, 255, 0.18);
+
+  border-radius: 999px;
+
+  background: rgba(77, 231, 255, 0.05);
+
+  cursor: pointer;
+}
+
+.slider::before {
+  content: '';
+
+  width: 18px;
+  height: 18px;
+
+  position: absolute;
+  left: 3px;
+  top: 3px;
+
+  border-radius: 50%;
+
+  background: #6a858e;
+
+  transition: 0.2s ease;
+}
+
+.switch input:checked + .slider {
+  border-color: rgba(77, 231, 255, 0.55);
+
+  background: rgba(77, 231, 255, 0.12);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+
+  background: #4de7ff;
+
+  box-shadow: 0 0 12px rgba(77, 231, 255, 0.6);
+}
+
+.hud-button {
+  min-height: 40px;
+  padding: 0 18px;
+
+  border: 1px solid rgba(77, 231, 255, 0.25);
+
+  border-radius: 6px;
+
+  background: rgba(77, 231, 255, 0.06);
+
+  color: #4de7ff;
+
+  font-size: 9px;
+  letter-spacing: 1.4px;
+
+  cursor: pointer;
+}
+
+.hud-button:hover {
+  background: rgba(77, 231, 255, 0.11);
+}

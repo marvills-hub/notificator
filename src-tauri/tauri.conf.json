@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Notificator",
+  "version": "0.1.0",
+  "identifier": "com.marvills.notificator",
+
+  "build": {
+    "beforeDevCommand": "npm run start",
+    "devUrl": "http://localhost:4200",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist/notificator/browser"
+  },
+
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Notificator",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1000,
+        "minHeight": 650,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false
+      },
+      {
+        "label": "widget",
+        "title": "Notificator",
+        "url": "/widget",
+        "width": 88,
+        "height": 88,
+        "minWidth": 88,
+        "minHeight": 88,
+        "maxWidth": 88,
+        "maxHeight": 88,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": true,
+        "shadow": false
+      },
+      {
+        "label": "critical-call",
+        "title": "Notificator Priority Alert",
+        "url": "/critical-call",
+        "width": 620,
+        "height": 620,
+        "center": true,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  }
+}
