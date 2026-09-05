@@ -14,15 +14,14 @@
     <span class="arc arc-top"></span>
     <span class="arc arc-bottom"></span>
 
-    <!-- <span class="tech-mark mark-left"></span>
-    <span class="tech-mark mark-right"></span> -->
-
     <span class="scan-dot"></span>
 
     <span class="core-glow"></span>
 
-    <strong>17</strong>
+    <strong>
+      {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+    </strong>
 
-    <span class="status-dot"></span>
+    <span class="status-dot" [class.active]="unreadCount() > 0"></span>
   </button>
 </div>

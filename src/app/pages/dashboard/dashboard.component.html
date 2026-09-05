@@ -14,8 +14,13 @@
       <div class="core-center"></div>
 
       <div class="core-text">
-        <strong>ACTIVE</strong>
-        <span>MONITORING</span>
+        <strong>
+          {{ connected() ? 'ACTIVE' : 'IDLE' }}
+        </strong>
+
+        <span>
+          {{ connected() ? 'MONITORING' : 'NO ACCOUNTS' }}
+        </span>
       </div>
     </div>
   </div>
@@ -24,7 +29,7 @@
     <article class="summary-card">
       <span class="summary-label">TOTAL UNREAD</span>
 
-      <strong>{{ totalUnread }}</strong>
+      <strong>{{ totalUnread() }}</strong>
 
       <span class="summary-meta">Across all connected accounts</span>
     </article>
@@ -32,7 +37,7 @@
     <article class="summary-card critical">
       <span class="summary-label">IMPORTANT</span>
 
-      <strong>{{ totalImportant }}</strong>
+      <strong>{{ totalImportant() }}</strong>
 
       <span class="summary-meta">Requires your attention</span>
     </article>
@@ -40,17 +45,17 @@
     <article class="summary-card">
       <span class="summary-label">CONNECTED</span>
 
-      <strong>{{ accounts.length }}</strong>
+      <strong>{{ connectedAccountCount() }}</strong>
 
       <span class="summary-meta">Communication sources</span>
     </article>
 
     <article class="summary-card">
-      <span class="summary-label">SYSTEM</span>
+      <span class="summary-label">MESSAGES</span>
 
-      <strong class="system-value">ONLINE</strong>
+      <strong>{{ totalMessages() }}</strong>
 
-      <span class="summary-meta">Realtime monitoring active</span>
+      <span class="summary-meta">Currently loaded</span>
     </article>
   </div>
 
@@ -62,35 +67,52 @@
           <h2>Accounts</h2>
         </div>
 
-        <span class="panel-count">{{ accounts.length }}</span>
+        <span class="panel-count">
+          {{ connectedAccountCount() }}
+        </span>
       </div>
 
-      <div class="account-list">
-        <article class="account-item" *ngFor="let account of accounts">
-          <div class="account-icon">
-            <span>{{ account.provider.charAt(0) }}</span>
-          </div>
+      @if (loading() && accounts().length === 0) {
+        <div class="dashboard-state">
+          <span class="state-loader"></span>
+          <p>Loading connected accounts...</p>
+        </div>
+      } @else if (accounts().length === 0) {
+        <div class="dashboard-state">
+          <strong>No connected accounts</strong>
 
-          <div class="account-info">
-            <strong>{{ account.name }}</strong>
-            <span>{{ account.provider }}</span>
-          </div>
+          <p>Connect Gmail from the Accounts page to begin monitoring messages.</p>
+        </div>
+      } @else {
+        <div class="account-list">
+          @for (account of accounts(); track account.name) {
+            <article class="account-item">
+              <div class="account-icon">
+                <span>{{ account.provider.charAt(0) }}</span>
+              </div>
 
-          <div class="account-stats">
-            <div>
-              <strong>{{ account.unread }}</strong>
-              <span>Unread</span>
-            </div>
+              <div class="account-info">
+                <strong>{{ account.name }}</strong>
+                <span>{{ account.provider }}</span>
+              </div>
 
-            <div>
-              <strong>{{ account.important }}</strong>
-              <span>Priority</span>
-            </div>
-          </div>
+              <div class="account-stats">
+                <div>
+                  <strong>{{ account.unread }}</strong>
+                  <span>Unread</span>
+                </div>
 
-          <span class="account-status" [class.warning]="account.status === 'warning'"></span>
-        </article>
-      </div>
+                <div>
+                  <strong>{{ account.important }}</strong>
+                  <span>Priority</span>
+                </div>
+              </div>
+
+              <span class="account-status" [class.warning]="account.status === 'warning'"></span>
+            </article>
+          }
+        </div>
+      }
     </section>
 
     <section class="panel activity-panel">
@@ -100,35 +122,48 @@
           <h2>Incoming Activity</h2>
         </div>
 
-        <span class="activity-live">
-          <span></span>
-          LIVE
-        </span>
+        @if (connected()) {
+          <span class="activity-live">
+            <span></span>
+            LIVE
+          </span>
+        }
       </div>
 
-      <div class="message-list">
-        <article
-          class="message-item"
-          *ngFor="let message of recentMessages"
-          [class.important]="message.important"
-        >
-          <div class="message-marker"></div>
+      @if (loading() && recentMessages().length === 0) {
+        <div class="dashboard-state">
+          <span class="state-loader"></span>
+          <p>Loading recent messages...</p>
+        </div>
+      } @else if (recentMessages().length === 0) {
+        <div class="dashboard-state">
+          <strong>No recent messages</strong>
 
-          <div class="message-body">
-            <div class="message-top">
-              <strong>{{ message.sender }}</strong>
-              <span>{{ message.time }}</span>
-            </div>
+          <p>Recent Gmail activity will appear here once messages are available.</p>
+        </div>
+      } @else {
+        <div class="message-list">
+          @for (message of recentMessages(); track $index) {
+            <article class="message-item" [class.important]="message.important">
+              <div class="message-marker"></div>
 
-            <p>{{ message.subject }}</p>
+              <div class="message-body">
+                <div class="message-top">
+                  <strong>{{ message.sender }}</strong>
+                  <span>{{ message.time }}</span>
+                </div>
 
-            <div class="message-meta">
-              <span>{{ message.provider }}</span>
-              <span>{{ message.account }}</span>
-            </div>
-          </div>
-        </article>
-      </div>
+                <p>{{ message.subject }}</p>
+
+                <div class="message-meta">
+                  <span>{{ message.provider }}</span>
+                  <span>{{ message.account }}</span>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
     </section>
   </div>
 </section>

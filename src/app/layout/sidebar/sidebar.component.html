@@ -21,8 +21,11 @@
     <a routerLink="/inbox" routerLinkActive="active">
       <span class="nav-icon">▤</span>
       <span>Unified Inbox</span>
-
-      <span class="badge">17</span>
+      @if (unreadCount() > 0) {
+        <span class="badge">
+          {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+        </span>
+      }
     </a>
 
     <a routerLink="/accounts" routerLinkActive="active">
@@ -37,6 +40,10 @@
       <span>Settings</span>
     </a>
   </nav>
+
+  <div class="sidebar-console">
+    <app-system-console></app-system-console>
+  </div>
 
   <div class="system-status">
     <span class="status-dot"></span>

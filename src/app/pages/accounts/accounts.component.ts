@@ -1,6 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { GmailService } from '../../core/services/gmail.service';
-import { GmailConnectionResult, GmailMessage } from '../../core/models/gmail-profile.model';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { GmailStateService } from '../../core/services/gmail-state.service';
 
 interface ProviderOption {
   id: 'gmail' | 'outlook' | 'whatsapp';
@@ -26,10 +25,32 @@ interface ConnectedAccountView {
   styleUrl: './accounts.component.scss',
 })
 export class AccountsComponent implements OnInit {
+  private readonly gmailState = inject(GmailStateService);
+
   readonly connectingProvider = signal<string | null>(null);
-  readonly restoringAccounts = signal(true);
-  readonly gmailMessages = signal<GmailMessage[]>([]);
-  readonly accounts = signal<ConnectedAccountView[]>([]);
+
+  readonly restoringAccounts = this.gmailState.restoring;
+  readonly gmailMessages = this.gmailState.messages;
+
+  readonly accounts = computed<ConnectedAccountView[]>(() => {
+    const profile = this.gmailState.profile();
+
+    if (!profile) {
+      return [];
+    }
+
+    return [
+      {
+        id: profile.emailAddress,
+        provider: 'Gmail',
+        name: 'Gmail',
+        email: profile.emailAddress,
+        unread: this.gmailState.unreadCount(),
+        important: this.gmailState.importantCount(),
+        syncing: this.gmailState.loading(),
+      },
+    ];
+  });
 
   readonly providers: ProviderOption[] = [
     {
@@ -52,28 +73,8 @@ export class AccountsComponent implements OnInit {
     },
   ];
 
-  constructor(private readonly gmail: GmailService) {}
-
   async ngOnInit(): Promise<void> {
-    await this.restoreConnectedAccounts();
-  }
-
-  private async restoreConnectedAccounts(): Promise<void> {
-    this.restoringAccounts.set(true);
-
-    try {
-      console.log('[GMAIL] Checking for saved Gmail connection...');
-
-      const result = await this.gmail.restore();
-
-      console.log('[GMAIL] Saved Gmail connection restored.', result.profile.emailAddress);
-
-      this.applyGmailConnection(result);
-    } catch (error) {
-      console.log('[GMAIL] No saved Gmail connection found.', error);
-    } finally {
-      this.restoringAccounts.set(false);
-    }
+    await this.gmailState.initialize();
   }
 
   async connect(provider: ProviderOption): Promise<void> {
@@ -102,15 +103,13 @@ export class AccountsComponent implements OnInit {
 
   private async connectGmail(): Promise<void> {
     try {
-      console.log('[GMAIL] Starting Gmail connection...');
+      console.log('[ACCOUNTS] Starting Gmail connection...');
 
-      const result = await this.gmail.connect();
+      await this.gmailState.connect();
 
-      this.applyGmailConnection(result);
-
-      console.log('[GMAIL] Gmail connected successfully.', result.profile.emailAddress);
+      console.log('[ACCOUNTS] Gmail connected successfully.', this.gmailState.emailAddress());
     } catch (error) {
-      console.error('[GMAIL] Gmail connection failed.', error);
+      console.error('[ACCOUNTS] Gmail connection failed.', error);
     }
   }
 
@@ -118,44 +117,15 @@ export class AccountsComponent implements OnInit {
     console.log('[OUTLOOK] Starting Outlook OAuth...');
   }
 
-  private applyGmailConnection(result: GmailConnectionResult): void {
-    const profile = result.profile;
-    const currentAccounts = this.accounts();
-
-    const existingIndex = currentAccounts.findIndex(
-      (account) => account.email === profile.emailAddress && account.provider === 'Gmail',
-    );
-
-    const account: ConnectedAccountView = {
-      id: existingIndex >= 0 ? currentAccounts[existingIndex].id : crypto.randomUUID(),
-      provider: 'Gmail',
-      name: 'Gmail',
-      email: profile.emailAddress,
-      unread: result.messages.filter((message) => !message.isRead).length,
-      important: result.messages.filter((message) => message.isImportant).length,
-      syncing: false,
-    };
-
-    if (existingIndex >= 0) {
-      const updatedAccounts = [...currentAccounts];
-
-      updatedAccounts[existingIndex] = account;
-
-      this.accounts.set(updatedAccounts);
-    } else {
-      this.accounts.update((accounts) => [...accounts, account]);
+  async disconnect(account: ConnectedAccountView): Promise<void> {
+    if (account.provider !== 'Gmail') {
+      return;
     }
 
-    this.gmailMessages.set(result.messages);
-
-    console.log('[GMAIL] UI account state updated.', this.accounts());
-  }
-
-  disconnect(account: ConnectedAccountView): void {
-    this.accounts.update((accounts) => accounts.filter((item) => item.id !== account.id));
-
-    if (account.provider === 'Gmail') {
-      this.gmailMessages.set([]);
+    try {
+      await this.gmailState.disconnect();
+    } catch (error) {
+      console.error('[ACCOUNTS] Unable to disconnect Gmail.', error);
     }
   }
 }

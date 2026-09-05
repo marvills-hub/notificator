@@ -3,6 +3,7 @@ export interface GmailProfile {
   messagesTotal: number;
   threadsTotal: number;
   historyId: string;
+  unreadCount: number;
 }
 
 export interface GmailMessage {

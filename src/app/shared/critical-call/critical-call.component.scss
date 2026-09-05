@@ -1,44 +1,35 @@
 :host {
   width: 100%;
   height: 100%;
-
   display: grid;
   place-items: center;
-
   background: transparent;
 }
 
 .critical-alert {
   width: calc(100% - 16px);
   height: calc(100% - 16px);
-
+  padding: 26px 34px;
   position: relative;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   overflow: hidden;
-
   border: 1px solid rgba(77, 231, 255, 0.38);
-
   background:
     radial-gradient(circle at center, rgba(77, 231, 255, 0.12), transparent 42%),
     rgba(3, 9, 13, 0.96);
-
   backdrop-filter: blur(20px);
+  box-sizing: border-box;
 }
 
 .critical-alert::before,
 .critical-alert::after {
   content: '';
-
   width: 80px;
   height: 2px;
-
   position: absolute;
-
   background: #4de7ff;
 }
 
@@ -53,13 +44,12 @@
 }
 
 .call-core {
-  width: 180px;
-  height: 180px;
-
+  width: 160px;
+  height: 160px;
   position: relative;
-
   display: grid;
   place-items: center;
+  flex: 0 0 auto;
 }
 
 .ring {
@@ -69,125 +59,206 @@
 
 .ring-one {
   inset: 0;
-
   border: 1px solid transparent;
-
   border-top-color: #4de7ff;
   border-bottom-color: rgba(77, 231, 255, 0.3);
-
   animation: rotate 5s linear infinite;
 }
 
 .ring-two {
   inset: 18px;
-
   border: 1px dashed rgba(77, 231, 255, 0.35);
-
   animation: reverseRotate 10s linear infinite;
 }
 
 .ring-three {
-  inset: 38px;
-
+  inset: 36px;
   border: 1px solid rgba(77, 231, 255, 0.25);
-
   box-shadow: 0 0 35px rgba(77, 231, 255, 0.1);
 }
 
 .phone {
-  width: 72px;
-  height: 72px;
-
+  width: 66px;
+  height: 66px;
   display: grid;
   place-items: center;
-
   border-radius: 50%;
-
   background: rgba(77, 231, 255, 0.1);
-
   color: #4de7ff;
-
-  font-size: 30px;
-
+  font-size: 28px;
   animation: phonePulse 1.25s ease-in-out infinite;
 }
 
 .critical-label {
-  margin-top: 16px;
-
+  margin-top: 14px;
   font-size: 9px;
   letter-spacing: 3px;
-
   color: #ff6676;
 }
 
 h1 {
-  margin: 9px 0 12px;
-
-  font-size: 28px;
+  margin: 8px 0 10px;
+  text-align: center;
+  font-size: 26px;
   font-weight: 500;
-
   letter-spacing: 3px;
+  color: #edfaff;
 }
 
 .caller {
-  font-size: 20px;
+  max-width: 100%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 19px;
   font-weight: 500;
-
   color: #edfaff;
 }
 
 .provider {
-  margin-top: 6px;
-
-  font-size: 10px;
-  letter-spacing: 2px;
-
+  max-width: 100%;
+  margin-top: 5px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  letter-spacing: 1.4px;
   color: #73929d;
 }
 
-.actions {
-  margin-top: 28px;
+.message-details {
+  width: min(440px, 100%);
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(77, 231, 255, 0.12);
+  border-left: 2px solid rgba(255, 102, 118, 0.65);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(255, 102, 118, 0.025), transparent 48%), rgba(5, 15, 20, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.015),
+    0 10px 30px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+}
 
+.message-subject {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f0fbff;
+}
+
+.message-preview {
+  margin: 8px 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #7e9aa4;
+}
+
+.actions {
+  margin-top: 22px;
   display: flex;
-  gap: 14px;
+  justify-content: center;
+  gap: 12px;
 }
 
 .actions button {
   min-width: 130px;
-  min-height: 44px;
-
+  min-height: 42px;
+  padding: 0 16px;
   border-radius: 5px;
-
   font-size: 9px;
-  letter-spacing: 2px;
-
+  font-weight: 600;
+  letter-spacing: 1.5px;
   cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.actions button:hover {
+  transform: translateY(-1px);
 }
 
 .answer {
   border: 1px solid rgba(77, 255, 174, 0.5);
-
   background: rgba(77, 255, 174, 0.08);
-
   color: #4dffae;
+}
+
+.answer:hover {
+  border-color: rgba(77, 255, 174, 0.75);
+  background: rgba(77, 255, 174, 0.13);
+  box-shadow: 0 0 20px rgba(77, 255, 174, 0.08);
 }
 
 .dismiss {
   border: 1px solid rgba(255, 83, 100, 0.38);
-
   background: rgba(255, 83, 100, 0.07);
-
   color: #ff6676;
 }
 
-.system-message {
-  margin-top: 22px;
+.dismiss:hover {
+  border-color: rgba(255, 83, 100, 0.68);
+  background: rgba(255, 83, 100, 0.12);
+  box-shadow: 0 0 20px rgba(255, 83, 100, 0.08);
+}
 
+.system-message {
+  margin-top: 18px;
   font-size: 7px;
   letter-spacing: 2px;
-
   color: #456069;
+}
+
+.critical-alert.gmail-alert {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255, 87, 105, 0.08), transparent 35%),
+    radial-gradient(circle at center, rgba(77, 231, 255, 0.09), transparent 48%),
+    rgba(3, 9, 13, 0.97);
+}
+
+.gmail-alert .call-core {
+  width: 142px;
+  height: 142px;
+}
+
+.gmail-alert .ring-two {
+  inset: 16px;
+}
+
+.gmail-alert .ring-three {
+  inset: 32px;
+}
+
+.gmail-alert .phone {
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+}
+
+.gmail-alert .critical-label {
+  color: #ff6676;
+}
+
+.gmail-alert h1 {
+  font-size: 24px;
+}
+
+.gmail-alert .message-subject {
+  color: #ffffff;
 }
 
 @keyframes rotate {
@@ -205,7 +276,6 @@ h1 {
 @keyframes phonePulse {
   50% {
     transform: scale(1.08);
-
     box-shadow: 0 0 30px rgba(77, 231, 255, 0.18);
   }
 }

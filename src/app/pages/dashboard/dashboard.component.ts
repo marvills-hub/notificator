@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
+import { GmailStateService } from '../../core/services/gmail-state.service';
 
 interface AccountSummary {
   name: string;
@@ -26,69 +27,104 @@ interface RecentMessage {
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
-  accounts: AccountSummary[] = [
-    {
-      name: 'Personal Gmail',
-      provider: 'Gmail',
-      unread: 4,
-      important: 1,
-      status: 'online',
-    },
-    {
-      name: 'Work Gmail',
-      provider: 'Gmail',
-      unread: 7,
-      important: 2,
-      status: 'online',
-    },
-    {
-      name: 'Outlook',
-      provider: 'Outlook',
-      unread: 2,
-      important: 1,
-      status: 'online',
-    },
-    {
-      name: 'WhatsApp',
-      provider: 'WhatsApp',
-      unread: 4,
-      important: 0,
-      status: 'online',
-    },
-  ];
+  private readonly gmailState = inject(GmailStateService);
 
-  recentMessages: RecentMessage[] = [
-    {
-      sender: 'John Smith',
-      subject: 'Frontend Developer Interview Schedule',
-      provider: 'Gmail',
-      account: 'Work Gmail',
-      time: '10:32 AM',
-      important: true,
-    },
-    {
-      sender: 'Client ABC',
-      subject: 'Homepage revision request',
-      provider: 'Outlook',
-      account: 'Outlook',
-      time: '10:18 AM',
-      important: true,
-    },
-    {
-      sender: 'David',
-      subject: 'Can we have a meeting later?',
-      provider: 'WhatsApp',
-      account: 'WhatsApp',
-      time: '9:56 AM',
-      important: false,
-    },
-  ];
+  readonly accounts = computed<AccountSummary[]>(() => {
+    const profile = this.gmailState.profile();
 
-  get totalUnread(): number {
-    return this.accounts.reduce((total, account) => total + account.unread, 0);
-  }
+    if (!profile) {
+      return [];
+    }
 
-  get totalImportant(): number {
-    return this.accounts.reduce((total, account) => total + account.important, 0);
+    return [
+      {
+        name: profile.emailAddress,
+        provider: 'Gmail',
+        unread: this.gmailState.unreadCount(),
+        important: this.gmailState.importantCount(),
+        status: 'online',
+      },
+    ];
+  });
+
+  readonly recentMessages = computed<RecentMessage[]>(() => {
+    const profile = this.gmailState.profile();
+
+    if (!profile) {
+      return [];
+    }
+
+    return this.gmailState
+      .messages()
+      .slice(0, 5)
+      .map((message) => ({
+        sender: message.senderName || message.senderAddress,
+        subject: message.subject || '(No subject)',
+        provider: 'Gmail',
+        account: profile.emailAddress,
+        time: this.formatReceivedAt(message.receivedAt),
+        important: message.isImportant,
+      }));
+  });
+
+  readonly totalUnread = computed(() => {
+    return this.gmailState.unreadCount();
+  });
+
+  readonly totalImportant = computed(() => {
+    return this.gmailState.importantCount();
+  });
+
+  readonly connectedAccountCount = computed(() => {
+    return this.gmailState.connected() ? 1 : 0;
+  });
+
+  readonly totalMessages = computed(() => {
+    return this.gmailState.messageCount();
+  });
+
+  readonly loading = this.gmailState.loading;
+  readonly connected = this.gmailState.connected;
+
+  private formatReceivedAt(value: string): string {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    const now = new Date();
+
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const difference = today.getTime() - messageDate.getTime();
+
+    const daysDifference = Math.round(difference / (1000 * 60 * 60 * 24));
+
+    if (daysDifference === 0) {
+      return date.toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    }
+
+    if (daysDifference === 1) {
+      return 'Yesterday';
+    }
+
+    if (date.getFullYear() === now.getFullYear()) {
+      return date.toLocaleDateString([], {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+
+    return date.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }
 }

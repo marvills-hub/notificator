@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+
+import { invoke } from '@tauri-apps/api/core';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
@@ -8,10 +10,38 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
   templateUrl: './floating-notificator.component.html',
   styleUrl: './floating-notificator.component.scss',
 })
-export class FloatingNotificatorComponent {
+export class FloatingNotificatorComponent implements OnInit, OnDestroy {
+  readonly unreadCount = signal(0);
+
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
+
   private startX = 0;
   private startY = 0;
   private dragging = false;
+
+  async ngOnInit(): Promise<void> {
+    await this.loadUnreadCount();
+
+    this.refreshTimer = setInterval(() => {
+      void this.loadUnreadCount();
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+  }
+
+  private async loadUnreadCount(): Promise<void> {
+    try {
+      const count = await invoke<number>('get_unread_count');
+
+      this.unreadCount.set(count);
+    } catch (error) {
+      console.error('[FLOATING] Unable to read unread count.', error);
+    }
+  }
 
   onMouseDown(event: MouseEvent): void {
     if (event.button !== 0) {
@@ -29,9 +59,9 @@ export class FloatingNotificatorComponent {
     }
 
     const distanceX = Math.abs(event.screenX - this.startX);
+
     const distanceY = Math.abs(event.screenY - this.startY);
 
-    // Only start dragging after the mouse actually moves.
     if (distanceX > 4 || distanceY > 4) {
       this.dragging = true;
 

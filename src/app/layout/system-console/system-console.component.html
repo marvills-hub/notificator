@@ -1,0 +1,98 @@
+<section class="system-console" [class.collapsed]="collapsed()">
+  <header class="console-header">
+    <div class="console-title">
+      <div class="console-indicator">
+        <span class="indicator-ring"></span>
+        <span class="indicator-core"></span>
+      </div>
+
+      <div>
+        <span class="console-kicker"> SYSTEM ACTIVITY </span>
+
+        <strong> Runtime Console </strong>
+      </div>
+    </div>
+
+    <div class="console-controls">
+      <div class="live-status">
+        <span></span>
+        LIVE
+      </div>
+
+      <span class="log-counter">
+        {{ logCount() }}
+      </span>
+
+      <!-- <button
+        type="button"
+        class="console-action"
+        (click)="testNotification()"
+        aria-label="Test desktop notification"
+      >
+        TEST
+      </button> -->
+
+      <button
+        type="button"
+        class="console-action"
+        (click)="clearLogs()"
+        aria-label="Clear system logs"
+      >
+        CLEAR
+      </button>
+
+      <button
+        type="button"
+        class="console-action collapse-action"
+        (click)="toggleCollapsed()"
+        aria-label="Toggle system console"
+      >
+        {{ collapsed() ? '+' : '−' }}
+      </button>
+    </div>
+  </header>
+
+  @if (!collapsed()) {
+    <div class="console-body">
+      <div class="console-grid"></div>
+
+      <div class="console-scanline"></div>
+
+      @if (logs().length === 0) {
+        <div class="console-empty">
+          <span class="empty-cursor"></span>
+          <span>Awaiting system activity...</span>
+        </div>
+      } @else {
+        <div class="log-list">
+          @for (log of logs(); track log.id) {
+            <div class="log-entry">
+              <span class="log-time">
+                {{ log.timestamp }}
+              </span>
+
+              <span class="log-type" [class]="getLogClass(log.type)">
+                {{ log.type }}
+              </span>
+
+              <span class="log-message">
+                {{ log.message }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <footer class="console-footer">
+    <div>
+      <span class="footer-node"></span>
+      CORE LINK
+    </div>
+
+    <span> NOTIFICATOR_RUNTIME </span>
+
+    <span> SECURE CHANNEL </span>
+  </footer>
+</section>

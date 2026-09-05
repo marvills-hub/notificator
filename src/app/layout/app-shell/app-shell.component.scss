@@ -2,7 +2,7 @@
   width: 100%;
   height: 100vh;
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-columns: 350px minmax(0, 1fr);
   overflow: hidden;
   background:
     radial-gradient(circle at 70% 10%, rgba(77, 231, 255, 0.06), transparent 30%), #05090d;
@@ -41,30 +41,4 @@
 
 .app-content::-webkit-scrollbar-thumb:hover {
   background: rgba(77, 231, 255, 0.35);
-}
-
-@media (max-width: 900px) {
-  .app-shell {
-    grid-template-columns: 84px minmax(0, 1fr);
-  }
-
-  .app-content {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 600px) {
-  .app-shell {
-    display: block;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  .app-main {
-    height: 100%;
-  }
-
-  .app-content {
-    padding: 16px;
-  }
 }

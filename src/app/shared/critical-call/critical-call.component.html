@@ -1,4 +1,4 @@
-<div class="critical-alert">
+<div class="critical-alert" [class.gmail-alert]="mode() === 'gmail'">
   <div class="hud-lines">
     <span></span>
     <span></span>
@@ -10,25 +10,73 @@
     <div class="ring ring-two"></div>
     <div class="ring ring-three"></div>
 
-    <div class="phone">☎</div>
+    <div class="phone">
+      @if (mode() === 'gmail') {
+        ✉
+      } @else {
+        ☎
+      }
+    </div>
   </div>
 
-  <span class="critical-label"> PRIORITY COMMUNICATION </span>
+  <span class="critical-label">
+    @if (mode() === 'gmail') {
+      CRITICAL MESSAGE
+    } @else {
+      PRIORITY COMMUNICATION
+    }
+  </span>
 
-  <h1>INCOMING CALL</h1>
+  <h1>
+    @if (mode() === 'gmail') {
+      PRIORITY EMAIL
+    } @else {
+      INCOMING CALL
+    }
+  </h1>
 
   <strong class="caller">
-    {{ caller }}
+    {{ caller() }}
   </strong>
 
   <span class="provider">
-    {{ provider }}
+    {{ provider() }}
+
+    @if (mode() === 'gmail' && senderAddress()) {
+      · {{ senderAddress() }}
+    }
   </span>
 
-  <div class="actions">
-    <button class="answer" type="button" (click)="answer()">ACCEPT</button>
+  @if (mode() === 'gmail') {
+    <div class="message-details">
+      <strong class="message-subject">
+        {{ subject() }}
+      </strong>
 
-    <button class="dismiss" type="button" (click)="dismiss()">IGNORE</button>
+      @if (preview()) {
+        <p class="message-preview">
+          {{ preview() }}
+        </p>
+      }
+    </div>
+  }
+
+  <div class="actions">
+    <button class="answer" type="button" (click)="answer()">
+      @if (mode() === 'gmail') {
+        OPEN MESSAGE
+      } @else {
+        ACCEPT
+      }
+    </button>
+
+    <button class="dismiss" type="button" (click)="dismiss()">
+      @if (mode() === 'gmail') {
+        DISMISS
+      } @else {
+        IGNORE
+      }
+    </button>
   </div>
 
   <span class="system-message"> NOTIFICATOR PRIORITY ALERT </span>

@@ -4,7 +4,7 @@
 
     <h1>Settings</h1>
 
-    <p>Configure Notificator desktop behavior.</p>
+    <p>Configure Notificator desktop behavior and notification rules.</p>
   </div>
 
   <div class="settings-panel">
@@ -29,17 +29,137 @@
     <div class="setting-row">
       <div>
         <strong>Desktop notifications</strong>
-        <span> Test native Windows notifications. </span>
+
+        <span> Allow Notificator to display notifications for new messages. </span>
       </div>
-      <button class="hud-button" type="button" (click)="testNotification()">TEST SIGNAL</button>
+
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="notificationsEnabled()"
+          (change)="toggleNotifications($event)"
+        />
+
+        <span class="slider"></span>
+      </label>
     </div>
 
     <div class="setting-row">
       <div>
-        <strong>Critical alert test</strong>
-        <span> Simulate an incoming priority call. </span>
+        <strong>Important messages only</strong>
+
+        <span> Only show desktop notifications for Gmail messages marked important. </span>
       </div>
-      <button class="hud-button" type="button" (click)="simulateCall()">SIMULATE CALL</button>
+
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="importantOnly()"
+          [disabled]="!notificationsEnabled()"
+          (change)="toggleImportantOnly($event)"
+        />
+
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row action-row">
+      <div>
+        <strong>Notification test</strong>
+
+        <span> Send a test native Windows notification. </span>
+      </div>
+
+      <button class="hud-button" type="button" (click)="testNotification()">TEST SIGNAL</button>
+    </div>
+
+    <div class="setting-divider"></div>
+
+    <div class="setting-section">
+      <div class="section-heading">
+        <div>
+          <span>PRIORITY ROUTING</span>
+
+          <h2>Critical Senders</h2>
+
+          <p>Messages from these email addresses are treated as critical alerts.</p>
+        </div>
+
+        <span class="sender-count">
+          {{ criticalSenders().length }}
+        </span>
+      </div>
+
+      <div class="critical-input">
+        <input
+          #criticalSenderInput
+          type="email"
+          placeholder="sender@example.com"
+          [value]="newCriticalSender()"
+          (input)="setCriticalSenderInput(criticalSenderInput.value)"
+          (keydown.enter)="addCriticalSender()"
+        />
+
+        <button
+          class="hud-button"
+          type="button"
+          [disabled]="!newCriticalSender().trim()"
+          (click)="addCriticalSender()"
+        >
+          ADD SENDER
+        </button>
+      </div>
+
+      @if (criticalSenders().length > 0) {
+        <div class="critical-sender-list">
+          @for (sender of criticalSenders(); track sender) {
+            <div class="critical-sender">
+              <div class="sender-indicator">
+                <span></span>
+              </div>
+
+              <div class="sender-info">
+                <strong>{{ sender }}</strong>
+
+                <span>Critical Gmail alert</span>
+              </div>
+
+              <button
+                type="button"
+                class="remove-button"
+                (click)="removeCriticalSender(sender)"
+                aria-label="Remove critical sender"
+              >
+                REMOVE
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="critical-empty">
+          <span class="empty-icon">!</span>
+
+          <div>
+            <strong>No critical senders configured</strong>
+
+            <span> Add an email address above to trigger the critical alert overlay. </span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="setting-divider"></div>
+
+    <div class="setting-row action-row critical-test-row">
+      <div>
+        <strong>Critical alert test</strong>
+
+        <span> Simulate an incoming priority call without waiting for an email. </span>
+      </div>
+
+      <button class="hud-button danger" type="button" (click)="simulateCall()">
+        SIMULATE CALL
+      </button>
     </div>
   </div>
 </section>
