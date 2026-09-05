@@ -8,12 +8,20 @@ import { GmailConnectionResult } from '../models/gmail-profile.model';
   providedIn: 'root',
 })
 export class GmailService {
-  private readonly clientId =
-    '765110123067-gvh629sadobl3b4nhe9amtv41aidh9jc.apps.googleusercontent.com';
+  private readonly clientId = '';
+  private readonly clientSecret = '';
 
   connect(): Promise<GmailConnectionResult> {
     return invoke<GmailConnectionResult>('connect_gmail', {
       clientId: this.clientId,
+      clientSecret: this.clientSecret,
+    });
+  }
+
+  restore(): Promise<GmailConnectionResult> {
+    return invoke<GmailConnectionResult>('restore_gmail', {
+      clientId: this.clientId,
+      clientSecret: this.clientSecret,
     });
   }
 }

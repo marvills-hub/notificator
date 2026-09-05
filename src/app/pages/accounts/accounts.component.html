@@ -1,17 +1,14 @@
 <section class="accounts-page">
   <div class="page-heading">
     <div>
-      <span class="page-kicker"> COMMUNICATION NETWORK </span>
-
+      <span class="page-kicker">COMMUNICATION NETWORK</span>
       <h1>Connected Accounts</h1>
-
       <p>Connect the communication accounts that Notificator should monitor.</p>
     </div>
 
     <div class="network-status">
       <span></span>
-
-      {{ accounts.length }}
+      {{ accounts().length }}
       CONNECTED
     </div>
   </div>
@@ -20,7 +17,6 @@
     <div class="section-heading">
       <div>
         <span>AVAILABLE PROVIDERS</span>
-
         <h2>Add communication source</h2>
       </div>
     </div>
@@ -46,18 +42,14 @@
 
           <div class="provider-content">
             <div class="provider-title">
-              <h3>
-                {{ provider.name }}
-              </h3>
+              <h3>{{ provider.name }}</h3>
 
               @if (provider.status === 'coming-soon') {
-                <span> COMING SOON </span>
+                <span>COMING SOON</span>
               }
             </div>
 
-            <p>
-              {{ provider.description }}
-            </p>
+            <p>{{ provider.description }}</p>
           </div>
 
           <button
@@ -82,56 +74,56 @@
     <div class="section-heading">
       <div>
         <span>ACTIVE CONNECTIONS</span>
-
         <h2>Monitored accounts</h2>
       </div>
 
       <span class="count">
-        {{ accounts.length }}
+        {{ accounts().length }}
       </span>
     </div>
 
-    @if (accounts.length === 0) {
+    @if (restoringAccounts()) {
+      <div class="accounts-loading">
+        <div class="loading-core">
+          <div class="loading-ring"></div>
+          <div class="loading-dot"></div>
+        </div>
+
+        <div class="loading-copy">
+          <strong>RESTORING CONNECTIONS</strong>
+          <p>Checking saved accounts and synchronizing Gmail data...</p>
+        </div>
+      </div>
+    } @else if (accounts().length === 0) {
       <div class="empty-state">
         <div class="empty-core">
           <span></span>
         </div>
 
-        <strong> NO ACCOUNTS CONNECTED </strong>
+        <strong>NO ACCOUNTS CONNECTED</strong>
 
         <p>Connect Gmail or Outlook above to begin monitoring messages.</p>
       </div>
     } @else {
       <div class="account-list">
-        @for (account of accounts; track account.id) {
+        @for (account of accounts(); track account.id) {
           <article class="account-row">
             <div class="account-provider">
               {{ account.provider.charAt(0) }}
             </div>
 
             <div class="account-details">
-              <strong>
-                {{ account.name }}
-              </strong>
-
-              <span>
-                {{ account.email }}
-              </span>
+              <strong>{{ account.name }}</strong>
+              <span>{{ account.email }}</span>
             </div>
 
             <div class="account-stat">
-              <strong>
-                {{ account.unread }}
-              </strong>
-
+              <strong>{{ account.unread }}</strong>
               <span>UNREAD</span>
             </div>
 
             <div class="account-stat">
-              <strong>
-                {{ account.important }}
-              </strong>
-
+              <strong>{{ account.important }}</strong>
               <span>PRIORITY</span>
             </div>
 
@@ -148,61 +140,51 @@
       </div>
     }
   </section>
-</section>
-@if (gmailMessages.length > 0) {
-  <section class="connected-section">
-    <div class="section-heading">
-      <div>
-        <span>LIVE GMAIL DATA</span>
 
-        <h2>Recent inbox messages</h2>
+  @if (!restoringAccounts() && gmailMessages().length > 0) {
+    <section class="connected-section">
+      <div class="section-heading">
+        <div>
+          <span>LIVE GMAIL DATA</span>
+          <h2>Recent inbox messages</h2>
+        </div>
+
+        <span class="count">
+          {{ gmailMessages().length }}
+        </span>
       </div>
 
-      <span class="count">
-        {{ gmailMessages.length }}
-      </span>
-    </div>
+      <div class="gmail-message-list">
+        @for (message of gmailMessages(); track message.id) {
+          <article class="gmail-message" [class.unread]="!message.isRead">
+            <div class="message-state">
+              @if (!message.isRead) {
+                <span></span>
+              }
+            </div>
 
-    <div class="gmail-message-list">
-      @for (message of gmailMessages; track message.id) {
-        <article class="gmail-message" [class.unread]="!message.isRead">
-          <div class="message-state">
-            @if (!message.isRead) {
-              <span></span>
-            }
-          </div>
+            <div class="message-sender">
+              <strong>{{ message.senderName }}</strong>
+              <span>{{ message.senderAddress }}</span>
+            </div>
 
-          <div class="message-sender">
-            <strong>
-              {{ message.senderName }}
-            </strong>
+            <div class="message-content">
+              <strong>{{ message.subject }}</strong>
+              <p>{{ message.snippet }}</p>
+            </div>
 
-            <span>
-              {{ message.senderAddress }}
-            </span>
-          </div>
+            <div class="message-flags">
+              @if (message.isImportant) {
+                <span>PRIORITY</span>
+              }
 
-          <div class="message-content">
-            <strong>
-              {{ message.subject }}
-            </strong>
-
-            <p>
-              {{ message.snippet }}
-            </p>
-          </div>
-
-          <div class="message-flags">
-            @if (message.isImportant) {
-              <span> PRIORITY </span>
-            }
-
-            @if (message.isStarred) {
-              <span> STARRED </span>
-            }
-          </div>
-        </article>
-      }
-    </div>
-  </section>
-}
+              @if (message.isStarred) {
+                <span>STARRED</span>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>

@@ -13,7 +13,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(
             tauri::generate_handler![
-                gmail::connect_gmail
+                gmail::connect_gmail,
+                gmail::restore_gmail
             ],
         )
         .setup(|app| {
