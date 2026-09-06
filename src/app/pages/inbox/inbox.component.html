@@ -1,136 +1,102 @@
 <section class="inbox-page">
-  <header class="inbox-header">
-    <div class="header-copy">
-      <span class="eyebrow">Unified Inbox</span>
-
-      <h1>Inbox</h1>
-
-      <p>View and manage messages from your connected accounts.</p>
-    </div>
-
-    @if (connected()) {
-      <button type="button" class="refresh-button" [disabled]="loading()" (click)="refresh()">
-        @if (loading()) {
-          <span class="refresh-spinner"></span>
-          Refreshing
-        } @else {
-          <span class="refresh-icon">↻</span>
-          Refresh
-        }
-      </button>
-    }
-  </header>
-
   @if (restoring()) {
     <div class="inbox-state">
       <div class="state-loader"></div>
-
-      <h2>Loading your inbox</h2>
-
-      <p>Restoring your connected accounts and messages...</p>
+      <strong>Loading inbox</strong>
+      <span>Restoring connected accounts and messages...</span>
     </div>
   } @else if (!connected()) {
     <div class="inbox-state">
       <div class="state-icon">✉</div>
-
-      <h2>No email account connected</h2>
-
-      <p>
-        Connect your Gmail account from the Accounts page to start receiving messages in
-        Notificator.
-      </p>
+      <strong>No email account connected</strong>
+      <span>Connect Gmail from Accounts to start receiving messages.</span>
     </div>
   } @else {
-    <div class="inbox-toolbar">
-      <div class="search-box">
-        <span class="search-icon">⌕</span>
-
-        <input
-          type="search"
-          placeholder="Search sender, subject or message..."
-          [value]="searchTerm()"
-          (input)="setSearchTerm($any($event.target).value)"
-        />
+    <div class="inbox-topbar">
+      <div class="inbox-title">
+        <strong>Inbox</strong>
+        <span>{{ filteredMessages().length }} visible</span>
       </div>
-
-      <div class="inbox-filters">
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="activeFilter() === 'all'"
-          (click)="setFilter('all')"
-        >
-          All
-          <span>{{ totalCount() }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="activeFilter() === 'unread'"
-          (click)="setFilter('unread')"
-        >
-          Unread
-          <span>{{ unreadCount() }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="activeFilter() === 'important'"
-          (click)="setFilter('important')"
-        >
-          Important
-          <span>{{ importantCount() }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="filter-button"
-          [class.active]="activeFilter() === 'starred'"
-          (click)="setFilter('starred')"
-        >
-          Starred
-          <span>{{ starredCount() }}</span>
-        </button>
+      <div class="inbox-actions">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input
+            type="search"
+            placeholder="Search messages..."
+            [value]="searchTerm()"
+            (input)="setSearchTerm($any($event.target).value)"
+          />
+        </div>
+        @if (connected()) {
+          <button
+            type="button"
+            class="refresh-button"
+            [disabled]="loading()"
+            (click)="refresh()"
+            aria-label="Refresh inbox"
+            title="Refresh inbox"
+          >
+            @if (loading()) {
+              <span class="refresh-spinner"></span>
+            } @else {
+              ↻
+            }
+          </button>
+        }
       </div>
     </div>
-
-    <div class="inbox-summary">
-      <div>
-        <strong>{{ filteredMessages().length }}</strong>
-        <span>Messages</span>
-      </div>
-
-      <div>
-        <strong>{{ unreadCount() }}</strong>
-        <span>Unread</span>
-      </div>
-
-      <div>
-        <strong>{{ importantCount() }}</strong>
-        <span>Important</span>
-      </div>
+    <div class="inbox-filters">
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="activeFilter() === 'all'"
+        (click)="setFilter('all')"
+      >
+        All
+        <span>{{ totalCount() }}</span>
+      </button>
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="activeFilter() === 'unread'"
+        (click)="setFilter('unread')"
+      >
+        Unread
+        <span>{{ unreadCount() }}</span>
+      </button>
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="activeFilter() === 'important'"
+        (click)="setFilter('important')"
+      >
+        Important
+        <span>{{ importantCount() }}</span>
+      </button>
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="activeFilter() === 'starred'"
+        (click)="setFilter('starred')"
+      >
+        Starred
+        <span>{{ starredCount() }}</span>
+      </button>
     </div>
-
     @if (loading() && messages().length === 0) {
-      <div class="inbox-state">
+      <div class="inbox-state compact">
         <div class="state-loader"></div>
-
-        <h2>Loading messages</h2>
-
-        <p>Fetching your latest Gmail messages...</p>
+        <strong>Loading messages</strong>
+        <span>Fetching your latest Gmail messages...</span>
       </div>
     } @else if (filteredMessages().length === 0) {
       <div class="inbox-state compact">
         <div class="state-icon">⌕</div>
-
-        <h2>No messages found</h2>
-
-        <p>No messages match your current search or filter.</p>
+        <strong>No messages found</strong>
+        <span>No messages match your current search or filter.</span>
       </div>
     } @else {
-      <div class="inbox-workspace" [class.has-selection]="selectedMessage()">
+      <div class="inbox-workspace">
         <div class="message-list">
           @for (message of filteredMessages(); track message.id) {
             <article
@@ -142,57 +108,40 @@
               [class.selected]="selectedMessageId() === message.id"
               (click)="selectMessage(message.id)"
             >
-              <div class="message-status">
-                <span class="unread-dot" [class.visible]="!message.isRead"></span>
-              </div>
-
+              <span class="message-marker"></span>
               <div class="sender-avatar">
                 {{ (message.senderName || message.senderAddress).charAt(0).toUpperCase() }}
               </div>
-
               <div class="message-content">
                 <div class="message-top">
                   <div class="sender">
-                    <strong>
-                      {{ message.senderName || message.senderAddress }}
-                    </strong>
-
-                    <span>
-                      {{ message.senderAddress }}
-                    </span>
+                    <strong>{{ message.senderName || message.senderAddress }}</strong>
+                    <span>{{ message.senderAddress }}</span>
                   </div>
-
                   <div class="message-badges">
-                    @if (message.isImportant) {
-                      <span class="badge important-badge"> Important </span>
+                    @if (!message.isRead) {
+                      <span class="unread-badge">Unread</span>
                     }
-
+                    @if (message.isImportant) {
+                      <span class="important-badge">Important</span>
+                    }
                     @if (message.isStarred) {
-                      <span class="star" title="Starred"> ★ </span>
+                      <span class="star">★</span>
                     }
                   </div>
                 </div>
-
-                <h3>
-                  {{ message.subject || '(No subject)' }}
-                </h3>
-
-                <p>
-                  {{ message.snippet }}
-                </p>
+                <div class="message-subject-row">
+                  <strong>{{ message.subject || '(No subject)' }}</strong>
+                  <span class="message-preview">{{ message.snippet }}</span>
+                </div>
               </div>
-
               <div class="message-meta">
-                <span class="provider-badge"> Gmail </span>
-
-                <time>
-                  {{ formatReceivedAt(message.receivedAt) }}
-                </time>
+                <span>Gmail</span>
+                <time>{{ formatReceivedAt(message.receivedAt) }}</time>
               </div>
             </article>
           }
         </div>
-
         @if (selectedMessage(); as message) {
           <div class="message-dialog-backdrop" (click)="closeMessageDetails()">
             <section
@@ -203,14 +152,10 @@
               (click)="$event.stopPropagation()"
             >
               <div class="detail-header">
-                <div>
-                  <span class="detail-eyebrow"> Gmail Message </span>
-
-                  <h2 id="messageDialogTitle">
-                    {{ message.subject || '(No subject)' }}
-                  </h2>
+                <div class="detail-title">
+                  <span>GMAIL</span>
+                  <h2 id="messageDialogTitle">{{ message.subject || '(No subject)' }}</h2>
                 </div>
-
                 <button
                   type="button"
                   class="detail-close"
@@ -220,74 +165,30 @@
                   ×
                 </button>
               </div>
-
               <div class="message-dialog-content">
                 <div class="detail-sender">
                   <div class="detail-avatar">
                     {{ (message.senderName || message.senderAddress).charAt(0).toUpperCase() }}
                   </div>
-
                   <div class="detail-sender-copy">
-                    <strong>
-                      {{ message.senderName || message.senderAddress }}
-                    </strong>
-
-                    <span>
-                      {{ message.senderAddress }}
-                    </span>
+                    <strong>{{ message.senderName || message.senderAddress }}</strong>
+                    <span>{{ message.senderAddress }}</span>
                   </div>
+                  <div class="detail-time">{{ formatReceivedAt(message.receivedAt) }}</div>
                 </div>
-
-                <div class="detail-meta">
-                  <div>
-                    <span class="detail-meta-label"> Received </span>
-
-                    <strong>
-                      {{ formatReceivedAt(message.receivedAt) }}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span class="detail-meta-label"> Provider </span>
-
-                    <strong> Gmail </strong>
-                  </div>
-
-                  <div>
-                    <span class="detail-meta-label"> Status </span>
-
-                    <strong>
-                      @if (message.isRead) {
-                        Read
-                      } @else {
-                        Unread
-                      }
-                    </strong>
-                  </div>
-                </div>
-
-                <div class="detail-flags">
+                <div class="detail-meta-row">
+                  <span>{{ message.isRead ? 'Read' : 'Unread' }}</span>
                   @if (message.isImportant) {
-                    <span class="detail-flag important"> Important </span>
+                    <span class="important">Important</span>
                   }
-
                   @if (message.isStarred) {
-                    <span class="detail-flag starred"> ★ Starred </span>
-                  }
-
-                  @if (!message.isImportant && !message.isStarred) {
-                    <span class="detail-flag neutral"> Standard Priority </span>
+                    <span class="starred">★ Starred</span>
                   }
                 </div>
-
                 <div class="detail-body">
-                  <span class="detail-section-label"> Message Preview </span>
-
-                  <p>
-                    {{ message.snippet || 'No message preview is available.' }}
-                  </p>
+                  <span>Message Preview</span>
+                  <p>{{ message.snippet || 'No message preview is available.' }}</p>
                 </div>
-
                 <div class="detail-actions">
                   <button
                     type="button"
@@ -296,16 +197,10 @@
                   >
                     Open in Gmail
                   </button>
-
-                  <button type="button" class="detail-action" disabled>Mark as Read</button>
-
+                  <button type="button" class="detail-action" disabled>Mark Read</button>
                   <button type="button" class="detail-action" disabled>Star</button>
                 </div>
-
-                <div class="detail-notice">
-                  Gmail actions will become available after the connection scope is upgraded from
-                  read-only access.
-                </div>
+                <div class="detail-notice">Gmail actions require upgraded Gmail permissions.</div>
               </div>
             </section>
           </div>

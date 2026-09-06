@@ -1,5 +1,7 @@
 mod gmail;
 mod system_log;
+mod windows_notifications;
+mod cloudflare;
 
 use std::sync::Mutex;
 
@@ -51,11 +53,19 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
-            gmail::connect_gmail,
-            gmail::restore_gmail,
-            gmail::disconnect_gmail,
+            cloudflare::configure_google_oauth,
+            gmail::commands::connect_gmail,
+            gmail::commands::cancel_gmail_connect,
+            gmail::commands::restore_gmail,
+            gmail::commands::disconnect_gmail,
+            gmail::commands::list_gmail_accounts,
+            gmail::commands::restore_gmail_accounts,
+            gmail::commands::disconnect_gmail_account,
+            gmail::commands::set_primary_gmail_account,
             get_unread_count,
             set_unread_count,
+            windows_notifications::request_windows_notification_access,
+            windows_notifications::get_windows_notifications,
         ])
         .setup(|app| {
             #[cfg(desktop)]

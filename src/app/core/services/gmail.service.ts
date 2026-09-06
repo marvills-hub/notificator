@@ -1,9 +1,12 @@
 import { Injectable } from '@angular/core';
 import { getIdToken } from 'firebase/auth';
 import { invoke } from '@tauri-apps/api/core';
-
 import { auth } from '../firebase/firebase.config';
-import { GmailConnectionResult } from '../models/gmail-profile.model';
+import {
+  GmailAccountConnectionResult,
+  GmailAccountSummary,
+  GmailConnectionResult,
+} from '../models/gmail-profile.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,10 +20,30 @@ export class GmailService {
     });
   }
 
+  async cancelConnect(): Promise<void> {
+    return invoke<void>('cancel_gmail_connect');
+  }
+
   async restore(): Promise<GmailConnectionResult> {
     const firebaseIdToken = await this.getFirebaseIdToken();
 
     return invoke<GmailConnectionResult>('restore_gmail', {
+      firebaseIdToken,
+    });
+  }
+
+  async listAccounts(): Promise<GmailAccountSummary[]> {
+    const firebaseIdToken = await this.getFirebaseIdToken();
+
+    return invoke<GmailAccountSummary[]>('list_gmail_accounts', {
+      firebaseIdToken,
+    });
+  }
+
+  async restoreAccounts(): Promise<GmailAccountConnectionResult[]> {
+    const firebaseIdToken = await this.getFirebaseIdToken();
+
+    return invoke<GmailAccountConnectionResult[]>('restore_gmail_accounts', {
       firebaseIdToken,
     });
   }
@@ -30,6 +53,24 @@ export class GmailService {
 
     return invoke<void>('disconnect_gmail', {
       firebaseIdToken,
+    });
+  }
+
+  async disconnectAccount(accountId: string): Promise<void> {
+    const firebaseIdToken = await this.getFirebaseIdToken();
+
+    return invoke<void>('disconnect_gmail_account', {
+      firebaseIdToken,
+      accountId,
+    });
+  }
+
+  async setPrimaryAccount(accountId: string): Promise<void> {
+    const firebaseIdToken = await this.getFirebaseIdToken();
+
+    return invoke<void>('set_primary_gmail_account', {
+      firebaseIdToken,
+      accountId,
     });
   }
 

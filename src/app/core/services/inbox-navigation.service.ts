@@ -1,8 +1,7 @@
-import { Injectable, inject, signal } from '@angular/core';
-
-import { Event, UnlistenFn, listen } from '@tauri-apps/api/event';
-
+import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Event, listen, UnlistenFn } from '@tauri-apps/api/event';
+import { RuntimePlatformService } from './runtime-platform.service';
 
 interface OpenGmailMessageEvent {
   messageId: string;
@@ -13,7 +12,7 @@ interface OpenGmailMessageEvent {
 })
 export class InboxNavigationService {
   private readonly router = inject(Router);
-
+  private readonly platform = inject(RuntimePlatformService);
   private readonly selectedMessageIdSignal = signal<string | null>(null);
 
   private unlistenOpenMessage?: UnlistenFn;
@@ -27,6 +26,10 @@ export class InboxNavigationService {
     }
 
     this.initialized = true;
+
+    if (!this.platform.isTauri) {
+      return;
+    }
 
     try {
       this.unlistenOpenMessage = await listen<OpenGmailMessageEvent>(
@@ -58,7 +61,6 @@ export class InboxNavigationService {
 
   destroy(): void {
     this.unlistenOpenMessage?.();
-
     this.unlistenOpenMessage = undefined;
     this.initialized = false;
   }

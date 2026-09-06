@@ -1,78 +1,81 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { invoke } from '@tauri-apps/api/core';
-
 import { GmailService } from './gmail.service';
-import { DesktopNotificationService } from './desktop-notification.service';
 import { SystemLogService } from './system-log.service';
-import { NotificationRulesService } from './notification-rules.service';
-
-import { GmailConnectionResult, GmailMessage, GmailProfile } from '../models/gmail-profile.model';
-import { CriticalAlertService } from './critical-alert.service';
+import { GmailMessageTrackerService } from './gmail-message-tracker.service';
+import { GmailNotificationService } from './gmail-notification.service';
+import { GmailUnreadSyncService } from './gmail-unread-sync.service';
+import { GmailAccountConnectionResult, GmailProfile } from '../models/gmail-profile.model';
+import { OAuthAssistanceService } from './oauth-assistance.service';
+import { OAuthIssue } from '../models/oauth-assistance.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GmailStateService {
   private readonly gmail = inject(GmailService);
-
-  private readonly desktopNotifications = inject(DesktopNotificationService);
-
   private readonly systemLogs = inject(SystemLogService);
-
-  private readonly notificationRules = inject(NotificationRulesService);
-
-  private readonly profileSignal = signal<GmailProfile | null>(null);
-
-  private readonly messagesSignal = signal<GmailMessage[]>([]);
-
-  private readonly criticalAlerts = inject(CriticalAlertService);
+  private readonly messageTracker = inject(GmailMessageTrackerService);
+  private readonly notifications = inject(GmailNotificationService);
+  private readonly unreadSync = inject(GmailUnreadSyncService);
+  private readonly accountsSignal = signal<GmailAccountConnectionResult[]>([]);
+  private readonly oauthAssistance = inject(OAuthAssistanceService);
 
   private readonly loadingSignal = signal(false);
-
   private readonly restoringSignal = signal(false);
-
   private readonly connectingSignal = signal(false);
-
   private readonly disconnectingSignal = signal(false);
-
   private readonly initializedSignal = signal(false);
-
   private readonly errorSignal = signal<string | null>(null);
+  private readonly oauthIssueSignal = signal<OAuthIssue | null>(null);
 
-  private readonly knownMessageIds = new Set<string>();
+  private browserOAuthErrorReported = false;
 
   private autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
 
-  readonly profile = this.profileSignal.asReadonly();
-
-  readonly messages = this.messagesSignal.asReadonly();
-
+  readonly accounts = this.accountsSignal.asReadonly();
   readonly loading = this.loadingSignal.asReadonly();
-
   readonly restoring = this.restoringSignal.asReadonly();
-
   readonly connecting = this.connectingSignal.asReadonly();
-
   readonly disconnecting = this.disconnectingSignal.asReadonly();
-
   readonly initialized = this.initializedSignal.asReadonly();
-
   readonly error = this.errorSignal.asReadonly();
+  readonly oauthIssue = this.oauthIssueSignal.asReadonly();
 
-  readonly connected = computed(() => this.profileSignal() !== null);
+  readonly connected = computed(() => this.accountsSignal().length > 0);
 
-  readonly emailAddress = computed(() => this.profileSignal()?.emailAddress ?? null);
+  readonly primaryAccount = computed(() => {
+    const accounts = this.accountsSignal();
 
-  readonly messageCount = computed(() => this.messagesSignal().length);
+    return accounts.find((account) => account.isPrimary) ?? accounts[0] ?? null;
+  });
 
-  readonly unreadCount = computed(() => this.profileSignal()?.unreadCount ?? 0);
+  readonly profile = computed<GmailProfile | null>(() => this.primaryAccount()?.profile ?? null);
+
+  readonly emailAddress = computed(() => this.primaryAccount()?.emailAddress ?? null);
+
+  readonly messages = computed(() => {
+    return this.accountsSignal()
+      .flatMap((account) => account.messages)
+      .sort((a, b) => {
+        const aTime = new Date(a.receivedAt).getTime();
+        const bTime = new Date(b.receivedAt).getTime();
+
+        return bTime - aTime;
+      });
+  });
+
+  readonly messageCount = computed(() => this.messages().length);
+
+  readonly unreadCount = computed(() =>
+    this.accountsSignal().reduce((total, account) => total + account.profile.unreadCount, 0),
+  );
 
   readonly importantCount = computed(
-    () => this.messagesSignal().filter((message) => message.isImportant).length,
+    () => this.messages().filter((message) => message.isImportant).length,
   );
 
   readonly starredCount = computed(
-    () => this.messagesSignal().filter((message) => message.isStarred).length,
+    () => this.messages().filter((message) => message.isStarred).length,
   );
 
   async initialize(): Promise<void> {
@@ -84,14 +87,22 @@ export class GmailStateService {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.systemLogs.add('GMAIL', 'Restoring Gmail connection...');
+    this.systemLogs.add('GMAIL', 'Restoring connected Gmail accounts...');
 
     try {
-      const result = await this.gmail.restore();
+      const accounts = await this.gmail.restoreAccounts();
 
-      await this.setConnection(result, false);
+      if (accounts.length === 0) {
+        this.systemLogs.add('WARNING', 'No stored Gmail connection found.');
 
-      this.systemLogs.add('GMAIL', `Gmail restored: ${result.profile.emailAddress}`);
+        await this.resetConnection();
+
+        return;
+      }
+
+      await this.setAccounts(accounts, false);
+
+      this.systemLogs.add('GMAIL', `${accounts.length} Gmail account(s) restored.`);
     } catch {
       this.systemLogs.add('WARNING', 'No stored Gmail connection found.');
 
@@ -111,13 +122,18 @@ export class GmailStateService {
     this.connectingSignal.set(true);
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
+    this.oauthIssueSignal.set(null);
 
     this.systemLogs.add('GMAIL', 'Connecting Gmail account...');
 
     try {
       const result = await this.gmail.connect();
 
-      await this.setConnection(result, false);
+      this.systemLogs.add('GMAIL', `Gmail authorized: ${result.profile.emailAddress}`);
+
+      const accounts = await this.gmail.restoreAccounts();
+
+      await this.setAccounts(accounts, false);
 
       this.systemLogs.add('GMAIL', `Gmail connected: ${result.profile.emailAddress}`);
     } catch (error) {
@@ -125,13 +141,31 @@ export class GmailStateService {
 
       this.errorSignal.set(message);
 
-      this.systemLogs.add('ERROR', `Gmail connection failed: ${message}`);
+      if (!this.browserOAuthErrorReported) {
+        this.oauthIssueSignal.set(this.oauthAssistance.resolve(error));
+      }
+
+      this.systemLogs.add(
+        this.browserOAuthErrorReported ? 'WARNING' : 'ERROR',
+        this.browserOAuthErrorReported
+          ? 'Gmail browser authorization problem reported by user.'
+          : `Gmail connection failed: ${message}`,
+      );
 
       throw error;
     } finally {
       this.connectingSignal.set(false);
       this.loadingSignal.set(false);
+      this.browserOAuthErrorReported = false;
     }
+  }
+
+  async cancelConnect(): Promise<void> {
+    await this.gmail.cancelConnect();
+  }
+
+  clearOAuthIssue(): void {
+    this.oauthIssueSignal.set(null);
   }
 
   async refresh(): Promise<void> {
@@ -146,16 +180,16 @@ export class GmailStateService {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.systemLogs.add('SYNC', 'Refreshing Gmail...');
+    this.systemLogs.add('SYNC', 'Refreshing Gmail accounts...');
 
     try {
-      const result = await this.gmail.restore();
+      const accounts = await this.gmail.restoreAccounts();
 
-      await this.setConnection(result, true);
+      await this.setAccounts(accounts, true);
 
       this.systemLogs.add(
         'SYNC',
-        `Gmail synchronized. ${result.messages.length} recent messages loaded.`,
+        `${accounts.length} Gmail account(s) synchronized. ${this.messages().length} recent messages loaded.`,
       );
     } catch (error) {
       const message = this.getErrorMessage(error);
@@ -197,6 +231,16 @@ export class GmailStateService {
   }
 
   async disconnect(): Promise<void> {
+    const primaryAccount = this.primaryAccount();
+
+    if (!primaryAccount) {
+      return;
+    }
+
+    await this.disconnectAccount(primaryAccount.accountId);
+  }
+
+  async disconnectAccount(accountId: string): Promise<void> {
     if (this.disconnectingSignal() || this.connectingSignal()) {
       return;
     }
@@ -205,14 +249,24 @@ export class GmailStateService {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.systemLogs.add('GMAIL', 'Disconnecting Gmail account...');
+    const account = this.accountsSignal().find((item) => item.accountId === accountId);
+
+    const label = account?.emailAddress ?? accountId;
+
+    this.systemLogs.add('GMAIL', `Disconnecting Gmail account: ${label}`);
 
     try {
-      await this.gmail.disconnect();
+      await this.gmail.disconnectAccount(accountId);
 
-      await this.resetConnection();
+      const accounts = await this.gmail.restoreAccounts();
 
-      this.systemLogs.add('GMAIL', 'Gmail disconnected.');
+      if (accounts.length === 0) {
+        await this.resetConnection();
+      } else {
+        await this.setAccounts(accounts, false);
+      }
+
+      this.systemLogs.add('GMAIL', `Gmail disconnected: ${label}`);
     } catch (error) {
       const message = this.getErrorMessage(error);
 
@@ -227,149 +281,74 @@ export class GmailStateService {
     }
   }
 
-  private async setConnection(
-    result: GmailConnectionResult,
-    detectNewMessages: boolean,
-  ): Promise<void> {
-    if (detectNewMessages) {
-      await this.handleNewMessages(result.messages);
+  async setPrimaryAccount(accountId: string): Promise<void> {
+    if (this.loadingSignal() || this.disconnectingSignal()) {
+      return;
     }
 
-    this.profileSignal.set(result.profile);
+    const account = this.accountsSignal().find((item) => item.accountId === accountId);
 
-    this.messagesSignal.set(result.messages);
+    if (!account || account.isPrimary) {
+      return;
+    }
 
-    this.rememberMessages(result.messages);
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+
+    this.systemLogs.add('GMAIL', `Setting primary Gmail account: ${account.emailAddress}`);
+
+    try {
+      await this.gmail.setPrimaryAccount(accountId);
+
+      this.accountsSignal.update((accounts) =>
+        accounts.map((item) => ({
+          ...item,
+          isPrimary: item.accountId === accountId,
+        })),
+      );
+
+      this.systemLogs.add('GMAIL', `Primary Gmail account updated: ${account.emailAddress}`);
+    } catch (error) {
+      const message = this.getErrorMessage(error);
+
+      this.errorSignal.set(message);
+
+      this.systemLogs.add('ERROR', `Unable to update primary Gmail account: ${message}`);
+
+      throw error;
+    } finally {
+      this.loadingSignal.set(false);
+    }
+  }
+
+  private async setAccounts(
+    accounts: GmailAccountConnectionResult[],
+    detectNewMessages: boolean,
+  ): Promise<void> {
+    const messages = accounts.flatMap((account) => account.messages);
+
+    if (detectNewMessages) {
+      const newMessages = this.messageTracker.getNewMessages(messages);
+
+      await this.notifications.handleNewMessages(newMessages);
+    }
+
+    this.accountsSignal.set(accounts);
+
+    this.messageTracker.remember(messages);
 
     this.errorSignal.set(null);
 
-    await this.syncUnreadCountToRust(result.profile.unreadCount);
-  }
-
-  private async handleNewMessages(messages: GmailMessage[]): Promise<void> {
-    const newMessages = messages.filter((message) => !this.knownMessageIds.has(message.id));
-
-    if (newMessages.length === 0) {
-      return;
-    }
-
-    this.systemLogs.add('GMAIL', `${newMessages.length} new Gmail message(s) detected.`);
-
-    const orderedMessages = [...newMessages].reverse();
-
-    for (const message of orderedMessages) {
-      if (!this.notificationRules.shouldNotify(message)) {
-        this.systemLogs.add(
-          'SYNC',
-          `Notification skipped by rules: ${message.subject || 'Untitled message'}`,
-        );
-
-        continue;
-      }
-
-      const priority = this.notificationRules.getPriority(message);
-
-      await this.notifyMessage(message, priority);
-    }
-  }
-
-  private async notifyMessage(
-    message: GmailMessage,
-    priority: 'normal' | 'important' | 'critical',
-  ): Promise<void> {
-    const sender = message.senderName || message.senderAddress || 'New Gmail message';
-
-    const subject = message.subject || message.snippet || 'You received a new email.';
-
-    let title = sender;
-
-    if (priority === 'important') {
-      title = `Important • ${sender}`;
-    }
-
-    if (priority === 'critical') {
-      title = `CRITICAL • ${sender}`;
-    }
-
-    const success = await this.desktopNotifications.show(title, subject);
-
-    if (priority === 'critical') {
-      await this.criticalAlerts.show(message);
-
-      this.systemLogs.add(
-        'WARNING',
-        `Critical alert triggered for: ${message.senderAddress || sender}`,
-      );
-    }
-
-    if (success) {
-      this.systemLogs.add(
-        priority === 'critical' ? 'WARNING' : 'CORE',
-        `${this.formatPriority(priority)} notification sent: ${message.subject || 'New Gmail message'}`,
-      );
-
-      return;
-    }
-
-    this.systemLogs.add(
-      'WARNING',
-      `Desktop notification could not be displayed: ${message.subject || 'New Gmail message'}`,
-    );
-  }
-
-  private formatPriority(priority: 'normal' | 'important' | 'critical'): string {
-    switch (priority) {
-      case 'important':
-        return 'Important';
-
-      case 'critical':
-        return 'Critical';
-
-      default:
-        return 'Normal';
-    }
-  }
-
-  private rememberMessages(messages: GmailMessage[]): void {
-    for (const message of messages) {
-      this.knownMessageIds.add(message.id);
-    }
-
-    const maxKnownMessages = 500;
-
-    if (this.knownMessageIds.size > maxKnownMessages) {
-      const ids = Array.from(this.knownMessageIds);
-
-      const recentIds = ids.slice(ids.length - maxKnownMessages);
-
-      this.knownMessageIds.clear();
-
-      for (const id of recentIds) {
-        this.knownMessageIds.add(id);
-      }
-    }
+    await this.unreadSync.sync(this.unreadCount());
   }
 
   private async resetConnection(): Promise<void> {
-    this.profileSignal.set(null);
-    this.messagesSignal.set([]);
+    this.accountsSignal.set([]);
     this.errorSignal.set(null);
+    this.oauthIssueSignal.set(null);
+    this.messageTracker.clear();
 
-    this.knownMessageIds.clear();
-
-    await this.syncUnreadCountToRust(0);
-  }
-
-  private async syncUnreadCountToRust(count: number): Promise<void> {
-    try {
-      await invoke('set_unread_count', {
-        count,
-      });
-
-      this.systemLogs.add('SYNC', `Unread count updated: ${count}`);
-    } catch {
-      this.systemLogs.add('WARNING', 'Unable to update floating widget unread count.');
-    }
+    await this.unreadSync.sync(0);
   }
 
   private getErrorMessage(error: unknown): string {
@@ -378,5 +357,15 @@ export class GmailStateService {
     }
 
     return String(error);
+  }
+
+  async reportBrowserOAuthError(): Promise<void> {
+    this.browserOAuthErrorReported = true;
+
+    this.oauthIssueSignal.set(this.oauthAssistance.browserError());
+
+    if (this.connectingSignal()) {
+      await this.gmail.cancelConnect();
+    }
   }
 }

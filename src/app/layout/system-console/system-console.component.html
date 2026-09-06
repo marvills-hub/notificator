@@ -23,15 +23,6 @@
         {{ logCount() }}
       </span>
 
-      <!-- <button
-        type="button"
-        class="console-action"
-        (click)="testNotification()"
-        aria-label="Test desktop notification"
-      >
-        TEST
-      </button> -->
-
       <button
         type="button"
         class="console-action"
@@ -64,12 +55,12 @@
           <span>Awaiting system activity...</span>
         </div>
       } @else {
-        <div class="log-list">
+        <div #logList class="log-list">
           @for (log of logs(); track log.id) {
             <div class="log-entry">
-              <span class="log-time">
+              <!-- <span class="log-time">
                 {{ log.timestamp }}
-              </span>
+              </span> -->
 
               <span class="log-type" [class]="getLogClass(log.type)">
                 {{ log.type }}

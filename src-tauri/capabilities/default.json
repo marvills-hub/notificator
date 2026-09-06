@@ -12,6 +12,12 @@
     "core:window:allow-unminimize",
     "core:window:allow-set-focus",
     "opener:allow-open-url",
-    "opener:allow-default-urls"
+    "opener:allow-default-urls",
+    "notification:default",
+    "notification:allow-register-listener",
+    "notification:allow-request-permission",
+    "notification:allow-is-permission-granted",
+    "notification:allow-notify",
+    "notification:allow-show"
   ]
 }

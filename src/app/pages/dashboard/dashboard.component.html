@@ -1,160 +1,99 @@
 <section class="dashboard">
-  <div class="dashboard-heading">
-    <div>
-      <span class="section-kicker">COMMUNICATION COMMAND CENTER</span>
-
-      <h1>System Overview</h1>
-
-      <p>Unified monitoring across your connected communication accounts.</p>
+  <div class="dashboard-topbar">
+    <div class="dashboard-title">
+      <strong>Dashboard</strong>
+      <span>{{ connected() ? 'Monitoring active' : 'No connected accounts' }}</span>
     </div>
-
-    <div class="system-core">
-      <div class="core-ring ring-one"></div>
-      <div class="core-ring ring-two"></div>
-      <div class="core-center"></div>
-
-      <div class="core-text">
-        <strong>
-          {{ connected() ? 'ACTIVE' : 'IDLE' }}
-        </strong>
-
-        <span>
-          {{ connected() ? 'MONITORING' : 'NO ACCOUNTS' }}
-        </span>
-      </div>
+    <div class="system-status" [class.active]="connected()">
+      <span class="status-dot"></span>
+      {{ connected() ? 'ACTIVE' : 'IDLE' }}
     </div>
   </div>
-
   <div class="summary-grid">
     <article class="summary-card">
-      <span class="summary-label">TOTAL UNREAD</span>
-
+      <span class="summary-label">Unread</span>
       <strong>{{ totalUnread() }}</strong>
-
-      <span class="summary-meta">Across all connected accounts</span>
     </article>
-
     <article class="summary-card critical">
-      <span class="summary-label">IMPORTANT</span>
-
+      <span class="summary-label">Important</span>
       <strong>{{ totalImportant() }}</strong>
-
-      <span class="summary-meta">Requires your attention</span>
     </article>
-
     <article class="summary-card">
-      <span class="summary-label">CONNECTED</span>
-
+      <span class="summary-label">Connected</span>
       <strong>{{ connectedAccountCount() }}</strong>
-
-      <span class="summary-meta">Communication sources</span>
     </article>
-
     <article class="summary-card">
-      <span class="summary-label">MESSAGES</span>
-
+      <span class="summary-label">Loaded</span>
       <strong>{{ totalMessages() }}</strong>
-
-      <span class="summary-meta">Currently loaded</span>
     </article>
   </div>
-
   <div class="dashboard-grid">
     <section class="panel accounts-panel">
       <div class="panel-heading">
-        <div>
-          <span class="panel-kicker">CONNECTED NETWORK</span>
-          <h2>Accounts</h2>
-        </div>
-
-        <span class="panel-count">
-          {{ connectedAccountCount() }}
-        </span>
+        <strong>Accounts</strong>
+        <span class="panel-count">{{ connectedAccountCount() }}</span>
       </div>
-
       @if (loading() && accounts().length === 0) {
         <div class="dashboard-state">
           <span class="state-loader"></span>
-          <p>Loading connected accounts...</p>
+          <p>Loading accounts...</p>
         </div>
       } @else if (accounts().length === 0) {
         <div class="dashboard-state">
           <strong>No connected accounts</strong>
-
-          <p>Connect Gmail from the Accounts page to begin monitoring messages.</p>
+          <p>Connect Gmail from Accounts.</p>
         </div>
       } @else {
         <div class="account-list">
           @for (account of accounts(); track account.name) {
             <article class="account-item">
-              <div class="account-icon">
-                <span>{{ account.provider.charAt(0) }}</span>
-              </div>
-
+              <div class="account-icon">{{ account.provider.charAt(0) }}</div>
               <div class="account-info">
                 <strong>{{ account.name }}</strong>
                 <span>{{ account.provider }}</span>
               </div>
-
               <div class="account-stats">
-                <div>
-                  <strong>{{ account.unread }}</strong>
-                  <span>Unread</span>
-                </div>
-
-                <div>
-                  <strong>{{ account.important }}</strong>
-                  <span>Priority</span>
-                </div>
+                <span
+                  ><strong>{{ account.unread }}</strong> unread</span
+                >
+                <span
+                  ><strong>{{ account.important }}</strong> priority</span
+                >
               </div>
-
               <span class="account-status" [class.warning]="account.status === 'warning'"></span>
             </article>
           }
         </div>
       }
     </section>
-
     <section class="panel activity-panel">
       <div class="panel-heading">
-        <div>
-          <span class="panel-kicker">RECENT SIGNALS</span>
-          <h2>Incoming Activity</h2>
-        </div>
-
+        <strong>Recent Activity</strong>
         @if (connected()) {
-          <span class="activity-live">
-            <span></span>
-            LIVE
-          </span>
+          <span class="activity-live"><span></span>LIVE</span>
         }
       </div>
-
       @if (loading() && recentMessages().length === 0) {
         <div class="dashboard-state">
           <span class="state-loader"></span>
-          <p>Loading recent messages...</p>
+          <p>Loading messages...</p>
         </div>
       } @else if (recentMessages().length === 0) {
         <div class="dashboard-state">
           <strong>No recent messages</strong>
-
-          <p>Recent Gmail activity will appear here once messages are available.</p>
+          <p>New Gmail activity will appear here.</p>
         </div>
       } @else {
         <div class="message-list">
           @for (message of recentMessages(); track $index) {
             <article class="message-item" [class.important]="message.important">
-              <div class="message-marker"></div>
-
+              <span class="message-marker"></span>
               <div class="message-body">
                 <div class="message-top">
                   <strong>{{ message.sender }}</strong>
                   <span>{{ message.time }}</span>
                 </div>
-
                 <p>{{ message.subject }}</p>
-
                 <div class="message-meta">
                   <span>{{ message.provider }}</span>
                   <span>{{ message.account }}</span>

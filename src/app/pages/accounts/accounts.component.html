@@ -1,70 +1,444 @@
 <section class="accounts-page">
-  <div class="page-heading">
-    <div>
-      <span class="page-kicker">COMMUNICATION NETWORK</span>
-      <h1>Connected Accounts</h1>
-      <p>Connect the communication accounts that Notificator should monitor.</p>
+  <div class="accounts-topbar">
+    <div class="accounts-title">
+      <strong>Accounts</strong>
+      <span>{{ accounts().length }} connected</span>
     </div>
-
-    <div class="network-status">
+    <div class="network-status" [class.active]="accounts().length > 0">
       <span></span>
-      {{ accounts().length }}
-      CONNECTED
+      {{ accounts().length > 0 ? 'ACTIVE' : 'IDLE' }}
     </div>
   </div>
 
+  @if (oauthIssue(); as issue) {
+    <section class="oauth-assistance" [attr.data-type]="issue.type">
+      <div class="oauth-assistance-header">
+        <div class="oauth-status-icon">!</div>
+        <div class="oauth-assistance-title">
+          <span>GMAIL AUTHORIZATION</span>
+          <strong>{{ issue.title }}</strong>
+        </div>
+        <button
+          type="button"
+          class="oauth-close"
+          aria-label="Close authorization help"
+          (click)="closeOAuthIssue()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="oauth-assistance-body">
+        <p>{{ issue.message }}</p>
+
+        <div class="oauth-browser-note">
+          <div class="browser-note-icon">G</div>
+          <div>
+            <strong>Check the Google browser window</strong>
+            <span>
+              Some Google authorization errors happen entirely in the browser and cannot be read
+              directly by Notificator.
+            </span>
+          </div>
+        </div>
+
+        <div class="oauth-guidance">
+          <span class="guidance-label">WHAT TO DO</span>
+
+          <div class="guidance-steps">
+            @for (step of issue.steps; track $index) {
+              <div class="guidance-step">
+                <span class="step-number">{{ $index + 1 }}</span>
+
+                <div class="step-content">
+                  <span>{{ step.text }}</span>
+
+                  @if (step.link && step.linkLabel) {
+                    <button type="button" class="step-link" (click)="openOAuthLink(step.link)">
+                      {{ step.linkLabel }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (
+          issue.type === 'access-blocked' ||
+          issue.type === 'test-user' ||
+          issue.type === 'browser-error' ||
+          issue.type === 'timeout'
+        ) {
+          <div class="oauth-development-note">
+            <div>
+              <span class="development-label">DEVELOPMENT MODE</span>
+              <strong>Google OAuth setup</strong>
+            </div>
+
+            <div class="development-path">
+              <span>Google Cloud</span>
+              <b>→</b>
+              <span>Gmail API</span>
+              <b>→</b>
+              <span>Google Auth</span>
+              <b>→</b>
+              <span>OAuth Client</span>
+            </div>
+
+            <p class="development-hint">
+              After creating your Google Desktop OAuth client, copy the Client ID and Client Secret
+              and register them through Notificator. You do not need to edit source code or run
+              Wrangler commands manually.
+            </p>
+
+            <button type="button" class="oauth-credentials" (click)="openGoogleOAuthSetup()">
+              ENTER CREDENTIALS
+            </button>
+          </div>
+        }
+
+        <div class="oauth-actions">
+          @if (issue.canRetry) {
+            <button
+              type="button"
+              class="oauth-retry"
+              [disabled]="connectingProvider() !== null"
+              (click)="retryGmailConnection()"
+            >
+              TRY AGAIN
+            </button>
+          }
+
+          <button type="button" class="oauth-dismiss" (click)="closeOAuthIssue()">CLOSE</button>
+        </div>
+      </div>
+    </section>
+  }
+
+  @if (showGoogleOAuthSetup()) {
+    <section class="oauth-setup-panel">
+      <div class="oauth-setup-header">
+        <div>
+          <span>GOOGLE OAUTH CONFIGURATION</span>
+          <strong>Register credentials with Notificator</strong>
+        </div>
+
+        <button
+          type="button"
+          class="oauth-setup-close"
+          aria-label="Close Google OAuth setup"
+          [disabled]="savingGoogleOAuthSetup()"
+          (click)="closeGoogleOAuthSetup()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="oauth-setup-intro">
+        <div class="oauth-setup-intro-icon">G</div>
+
+        <div>
+          <strong>Paste the credentials created in Google Cloud</strong>
+          <span>
+            Notificator will securely register the Google OAuth credentials with your Cloudflare
+            Worker so you do not need to edit code or use the command line.
+          </span>
+        </div>
+      </div>
+
+      <div class="oauth-setup-grid">
+        <div class="oauth-field">
+          <label for="cloudflare-account-id">Cloudflare Account ID</label>
+
+          <div class="oauth-field-input-row">
+            <input
+              id="cloudflare-account-id"
+              type="text"
+              autocomplete="off"
+              placeholder="Enter your Cloudflare Account ID"
+              [value]="googleOAuthSetup().accountId"
+              [disabled]="savingGoogleOAuthSetup()"
+              (input)="updateGoogleOAuthField('accountId', $any($event.target).value)"
+            />
+
+            <button
+              type="button"
+              class="oauth-field-link"
+              (click)="openOAuthLink('https://dash.cloudflare.com/')"
+            >
+              OPEN CLOUDFLARE
+            </button>
+          </div>
+
+          <span>Open your Cloudflare dashboard and copy the Account ID.</span>
+        </div>
+
+        <div class="oauth-field">
+          <label for="cloudflare-worker-name">Cloudflare Worker name</label>
+
+          <div class="oauth-field-input-row">
+            <input
+              id="cloudflare-worker-name"
+              type="text"
+              autocomplete="off"
+              placeholder="notificator-api"
+              [value]="googleOAuthSetup().scriptName"
+              [disabled]="savingGoogleOAuthSetup()"
+              (input)="updateGoogleOAuthField('scriptName', $any($event.target).value)"
+            />
+
+            <button
+              type="button"
+              class="oauth-field-link"
+              (click)="openOAuthLink('https://dash.cloudflare.com/?to=/:account/workers-and-pages')"
+            >
+              OPEN WORKER
+            </button>
+          </div>
+
+          <span>Use the name of the Worker that hosts the Notificator API.</span>
+        </div>
+
+        <div class="oauth-field oauth-field-full">
+          <label for="cloudflare-api-token">Cloudflare API token</label>
+
+          <div class="oauth-field-input-row">
+            <input
+              id="cloudflare-api-token"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Paste a Cloudflare API token"
+              [value]="googleOAuthSetup().apiToken"
+              [disabled]="savingGoogleOAuthSetup()"
+              (input)="updateGoogleOAuthField('apiToken', $any($event.target).value)"
+            />
+
+            <button
+              type="button"
+              class="oauth-field-link"
+              (click)="openOAuthLink('https://dash.cloudflare.com/profile/api-tokens')"
+            >
+              CREATE API TOKEN
+            </button>
+          </div>
+
+          <span>Create a token with permission to edit Workers, then paste it here.</span>
+        </div>
+
+        <div class="oauth-field oauth-field-full">
+          <label for="google-client-id">Google OAuth Client ID</label>
+
+          <div class="oauth-field-input-row">
+            <input
+              id="google-client-id"
+              type="text"
+              autocomplete="off"
+              placeholder="xxxxxxxx.apps.googleusercontent.com"
+              [value]="googleOAuthSetup().clientId"
+              [disabled]="savingGoogleOAuthSetup()"
+              (input)="updateGoogleOAuthField('clientId', $any($event.target).value)"
+            />
+
+            <button
+              type="button"
+              class="oauth-field-link"
+              (click)="openOAuthLink('https://console.cloud.google.com/auth/clients')"
+            >
+              OPEN GOOGLE KEYS
+            </button>
+          </div>
+
+          <span>Copy the Client ID from Google Auth Platform → Clients → your Desktop app.</span>
+        </div>
+
+        <div class="oauth-field oauth-field-full">
+          <label for="google-client-secret">Google OAuth Client Secret</label>
+
+          <div class="oauth-field-input-row">
+            <input
+              id="google-client-secret"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Paste the Google OAuth Client Secret"
+              [value]="googleOAuthSetup().clientSecret"
+              [disabled]="savingGoogleOAuthSetup()"
+              (input)="updateGoogleOAuthField('clientSecret', $any($event.target).value)"
+            />
+
+            <button
+              type="button"
+              class="oauth-field-link"
+              (click)="openOAuthLink('https://console.cloud.google.com/auth/clients')"
+            >
+              OPEN GOOGLE KEYS
+            </button>
+          </div>
+
+          <span> Open your Desktop OAuth client in Google Cloud and copy the Client Secret. </span>
+        </div>
+
+        <div class="oauth-field oauth-field-full">
+          <label>Google OAuth Test Users</label>
+
+          <div class="oauth-field-input-row">
+            <div class="oauth-field-info">
+              Add every Gmail account you want to connect while Notificator is in Google testing
+              mode.
+            </div>
+
+            <button
+              type="button"
+              class="oauth-field-link"
+              (click)="openOAuthLink('https://console.cloud.google.com/auth/audience')"
+            >
+              MANAGE TEST USERS
+            </button>
+          </div>
+
+          <span>
+            This is required during development when Google OAuth publishing status is Testing.
+          </span>
+        </div>
+      </div>
+
+      <div class="oauth-setup-security">
+        <strong>Credential safety</strong>
+        <span>
+          Notificator does not save the Cloudflare API token or Google Client Secret in
+          localStorage. Sensitive form values are cleared after the registration attempt succeeds.
+        </span>
+      </div>
+
+      @if (googleOAuthSetupError(); as error) {
+        <div class="oauth-setup-result error">
+          <strong>Configuration failed</strong>
+          <span>{{ error }}</span>
+        </div>
+      }
+
+      @if (googleOAuthSetupSuccess()) {
+        <div class="oauth-setup-result success">
+          <strong>Google OAuth configured</strong>
+          <span>
+            The OAuth credentials were registered successfully. You can now continue with Gmail
+            authorization.
+          </span>
+        </div>
+      }
+
+      <div class="oauth-setup-actions">
+        <button
+          type="button"
+          class="oauth-setup-cancel"
+          [disabled]="savingGoogleOAuthSetup()"
+          (click)="closeGoogleOAuthSetup()"
+        >
+          CANCEL
+        </button>
+
+        <button
+          type="button"
+          class="oauth-setup-save"
+          [disabled]="!googleOAuthSetupValid() || savingGoogleOAuthSetup()"
+          (click)="saveGoogleOAuthSetupAndConnect()"
+        >
+          @if (savingGoogleOAuthSetup()) {
+            SAVING...
+          } @else {
+            SAVE & CONTINUE
+          }
+        </button>
+      </div>
+    </section>
+  }
+
   <section class="provider-section">
     <div class="section-heading">
-      <div>
-        <span>AVAILABLE PROVIDERS</span>
-        <h2>Add communication source</h2>
-      </div>
+      <strong>Add Account</strong>
+      <span>Connect another communication source</span>
     </div>
 
     <div class="provider-grid">
       @for (provider of providers; track provider.id) {
         <article class="provider-card" [class.disabled]="provider.status === 'coming-soon'">
-          <div class="provider-icon" [attr.data-provider]="provider.id">
-            @switch (provider.id) {
-              @case ('gmail') {
-                G
-              }
-
-              @case ('outlook') {
-                O
-              }
-
-              @case ('whatsapp') {
-                W
-              }
-            }
-          </div>
-
-          <div class="provider-content">
-            <div class="provider-title">
-              <h3>{{ provider.name }}</h3>
-
-              @if (provider.status === 'coming-soon') {
-                <span>COMING SOON</span>
+          <div class="provider-card-header">
+            <div class="provider-icon" [attr.data-provider]="provider.id">
+              @switch (provider.id) {
+                @case ('gmail') {
+                  <img src="https://cdn.simpleicons.org/gmail" alt="Gmail" />
+                }
+                @case ('outlook') {
+                  <img
+                    src="https://msicons.com/icons/apps/Microsoft%20Outlook.svg"
+                    alt="Microsoft Outlook"
+                  />
+                }
+                @case ('whatsapp') {
+                  <img src="https://cdn.simpleicons.org/whatsapp" alt="WhatsApp" />
+                }
               }
             </div>
 
+            <div class="provider-heading">
+              <div class="provider-title">
+                <strong>{{ provider.name }}</strong>
+
+                @if (provider.status === 'coming-soon') {
+                  <span>SOON</span>
+                }
+              </div>
+
+              <span class="provider-type">
+                @switch (provider.id) {
+                  @case ('gmail') {
+                    GOOGLE MAIL
+                  }
+                  @case ('outlook') {
+                    MICROSOFT MAIL
+                  }
+                  @case ('whatsapp') {
+                    MESSAGING
+                  }
+                }
+              </span>
+            </div>
+          </div>
+
+          <div class="provider-content">
             <p>{{ provider.description }}</p>
           </div>
 
-          <button
-            type="button"
-            [disabled]="provider.status === 'coming-soon' || connectingProvider() === provider.id"
-            (click)="connect(provider)"
-          >
-            @if (connectingProvider() === provider.id) {
-              CONNECTING...
-            } @else if (provider.status === 'coming-soon') {
-              UNAVAILABLE
+          <div class="provider-card-footer">
+            @if (connectingProvider() === provider.id && provider.id === 'gmail') {
+              <div class="oauth-connect-actions">
+                @if (showOAuthHelp()) {
+                  <button type="button" class="browser-error" (click)="openOAuthHelp()">
+                    OPEN HELP
+                  </button>
+                }
+
+                <button type="button" class="cancel-connect" (click)="cancelConnect(provider)">
+                  CANCEL
+                </button>
+              </div>
             } @else {
-              CONNECT
+              <button
+                type="button"
+                class="provider-connect"
+                [disabled]="provider.status === 'coming-soon' || connectingProvider() !== null"
+                (click)="connect(provider)"
+              >
+                @if (connectingProvider() === provider.id) {
+                  <span class="connecting-label">WAITING FOR GOOGLE</span>
+                } @else if (provider.status === 'coming-soon') {
+                  UNAVAILABLE
+                } @else {
+                  CONNECT ACCOUNT
+                }
+              </button>
             }
-          </button>
+          </div>
         </article>
       }
     </div>
@@ -72,14 +446,8 @@
 
   <section class="connected-section">
     <div class="section-heading">
-      <div>
-        <span>ACTIVE CONNECTIONS</span>
-        <h2>Monitored accounts</h2>
-      </div>
-
-      <span class="count">
-        {{ accounts().length }}
-      </span>
+      <strong>Connected Accounts</strong>
+      <span class="count">{{ accounts().length }}</span>
     </div>
 
     @if (restoringAccounts()) {
@@ -90,51 +458,61 @@
         </div>
 
         <div class="loading-copy">
-          <strong>RESTORING CONNECTIONS</strong>
-          <p>Checking saved accounts and synchronizing Gmail data...</p>
+          <strong>Restoring connections</strong>
+          <span>Synchronizing saved Gmail accounts...</span>
         </div>
       </div>
     } @else if (accounts().length === 0) {
       <div class="empty-state">
-        <div class="empty-core">
-          <span></span>
-        </div>
-
-        <strong>NO ACCOUNTS CONNECTED</strong>
-
-        <p>Connect Gmail or Outlook above to begin monitoring messages.</p>
+        <strong>No connected accounts</strong>
+        <span>Connect Gmail above to begin monitoring messages.</span>
       </div>
     } @else {
       <div class="account-list">
         @for (account of accounts(); track account.id) {
-          <article class="account-row">
+          <article class="account-row" [class.primary]="account.isPrimary">
             <div class="account-provider">
               {{ account.provider.charAt(0) }}
             </div>
 
             <div class="account-details">
-              <strong>{{ account.name }}</strong>
+              <div class="account-name-row">
+                <strong>{{ account.name }}</strong>
+
+                @if (account.isPrimary) {
+                  <span class="primary-badge">PRIMARY</span>
+                }
+              </div>
+
               <span>{{ account.email }}</span>
             </div>
 
             <div class="account-stat">
               <strong>{{ account.unread }}</strong>
-              <span>UNREAD</span>
+              <span>Unread</span>
             </div>
 
             <div class="account-stat">
               <strong>{{ account.important }}</strong>
-              <span>PRIORITY</span>
+              <span>Priority</span>
             </div>
 
             <div class="connection-state">
               <span></span>
-              CONNECTED
+              Connected
             </div>
 
-            <button class="disconnect" type="button" (click)="disconnect(account)">
-              DISCONNECT
-            </button>
+            <div class="account-actions">
+              @if (!account.isPrimary) {
+                <button class="set-primary" type="button" (click)="setPrimary(account)">
+                  Set Primary
+                </button>
+              }
+
+              <button class="disconnect" type="button" (click)="disconnect(account)">
+                Disconnect
+              </button>
+            </div>
           </article>
         }
       </div>
@@ -144,24 +522,14 @@
   @if (!restoringAccounts() && gmailMessages().length > 0) {
     <section class="connected-section">
       <div class="section-heading">
-        <div>
-          <span>LIVE GMAIL DATA</span>
-          <h2>Recent inbox messages</h2>
-        </div>
-
-        <span class="count">
-          {{ gmailMessages().length }}
-        </span>
+        <strong>Recent Gmail Activity</strong>
+        <span class="count">{{ gmailMessages().length }}</span>
       </div>
 
       <div class="gmail-message-list">
-        @for (message of gmailMessages(); track message.id) {
+        @for (message of gmailMessages(); track message.accountId + ':' + message.id) {
           <article class="gmail-message" [class.unread]="!message.isRead">
-            <div class="message-state">
-              @if (!message.isRead) {
-                <span></span>
-              }
-            </div>
+            <span class="message-state"></span>
 
             <div class="message-sender">
               <strong>{{ message.senderName }}</strong>
@@ -173,13 +541,17 @@
               <p>{{ message.snippet }}</p>
             </div>
 
+            <div class="message-account">
+              {{ message.accountEmail }}
+            </div>
+
             <div class="message-flags">
               @if (message.isImportant) {
-                <span>PRIORITY</span>
+                <span>Priority</span>
               }
 
               @if (message.isStarred) {
-                <span>STARRED</span>
+                <span>★</span>
               }
             </div>
           </article>

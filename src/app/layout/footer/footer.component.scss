@@ -1,0 +1,72 @@
+.app-footer {
+  min-height: 34px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(77, 231, 255, 0.14);
+  background:
+    radial-gradient(circle at 85% 50%, rgba(77, 231, 255, 0.035), transparent 24%),
+    rgba(5, 12, 17, 0.94);
+  color: #718b94;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.footer-left,
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.footer-separator {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(77, 231, 255, 0.45);
+  box-shadow: 0 0 5px rgba(77, 231, 255, 0.25);
+}
+.footer-right span {
+  color: #607b84;
+}
+.footer-right a {
+  position: relative;
+  color: #6cecff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition:
+    color 0.16s ease,
+    text-shadow 0.16s ease;
+}
+.footer-right a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #4de7ff, transparent);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.footer-right a:hover {
+  color: #baf8ff;
+  text-shadow:
+    0 0 6px rgba(77, 231, 255, 0.45),
+    0 0 12px rgba(77, 231, 255, 0.16);
+}
+.footer-right a:hover::after {
+  opacity: 1;
+}
+@media (max-width: 700px) {
+  .app-footer {
+    padding: 0 10px;
+  }
+  .footer-left span:last-child,
+  .footer-separator {
+    display: none;
+  }
+}

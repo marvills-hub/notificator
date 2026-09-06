@@ -1,21 +1,28 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
   isPermissionGranted,
   onAction,
   requestPermission,
   sendNotification,
 } from '@tauri-apps/plugin-notification';
+import { RuntimePlatformService } from './runtime-platform.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DesktopNotificationService {
+  private readonly platform = inject(RuntimePlatformService);
+
   private initialized = false;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
     this.initialized = true;
+
+    if (!this.platform.isTauri) {
+      return;
+    }
 
     try {
       await onAction((notification) => {
@@ -33,6 +40,24 @@ export class DesktopNotificationService {
   }
 
   async ensurePermission(): Promise<boolean> {
+    if (!this.platform.isTauri) {
+      if (!('Notification' in window)) {
+        return false;
+      }
+
+      if (Notification.permission === 'granted') {
+        return true;
+      }
+
+      if (Notification.permission === 'denied') {
+        return false;
+      }
+
+      const permission = await Notification.requestPermission();
+
+      return permission === 'granted';
+    }
+
     try {
       let granted = await isPermissionGranted();
 
@@ -58,6 +83,28 @@ export class DesktopNotificationService {
       return false;
     }
 
+    if (!this.platform.isTauri) {
+      try {
+        const notification = new Notification(title, {
+          body,
+        });
+
+        if (messageId) {
+          notification.onclick = () => {
+            console.log('[NOTIFICATION] Gmail browser notification clicked:', messageId);
+
+            window.focus();
+          };
+        }
+
+        return true;
+      } catch (error) {
+        console.error('[NOTIFICATION] Unable to show browser notification.', error);
+
+        return false;
+      }
+    }
+
     try {
       sendNotification({
         title,
@@ -73,7 +120,7 @@ export class DesktopNotificationService {
 
       return true;
     } catch (error) {
-      console.error('[NOTIFICATION] Unable to show notification.', error);
+      console.error('[NOTIFICATION] Unable to show desktop notification.', error);
 
       return false;
     }

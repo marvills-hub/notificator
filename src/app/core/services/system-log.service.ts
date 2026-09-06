@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Event, UnlistenFn, listen } from '@tauri-apps/api/event';
+import { RuntimePlatformService } from './runtime-platform.service';
 
 export type SystemLogType = 'CORE' | 'AUTH' | 'GMAIL' | 'SYNC' | 'WARNING' | 'ERROR';
 
@@ -19,6 +20,7 @@ export interface SystemLog {
   providedIn: 'root',
 })
 export class SystemLogService {
+  private readonly platform = inject(RuntimePlatformService);
   private readonly logsSignal = signal<SystemLog[]>([]);
 
   private unlistenSystemLog?: UnlistenFn;
@@ -34,6 +36,11 @@ export class SystemLogService {
 
     this.initialized = true;
 
+    if (!this.platform.isTauri) {
+      this.add('CORE', 'System activity running in browser mode.');
+      return;
+    }
+
     try {
       this.unlistenSystemLog = await listen<SystemLogEvent>(
         'system-log',
@@ -45,7 +52,6 @@ export class SystemLogService {
       this.add('CORE', 'System activity channel connected.');
     } catch (error) {
       console.error('[SYSTEM LOG] Unable to listen for runtime logs.', error);
-
       this.add('ERROR', 'Unable to connect to runtime event channel.');
     }
   }
@@ -60,7 +66,6 @@ export class SystemLogService {
 
     this.logsSignal.update((logs) => {
       const updatedLogs = [...logs, log];
-
       const maxLogs = 100;
 
       if (updatedLogs.length > maxLogs) {
