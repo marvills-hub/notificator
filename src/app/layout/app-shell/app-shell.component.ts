@@ -11,6 +11,7 @@ import { SystemLogService } from '../../core/services/system-log.service';
 import { InboxNavigationService } from '../../core/services/inbox-navigation.service';
 import { DesktopNotificationService } from '../../core/services/desktop-notification.service';
 import { WindowsNotificationListenerService } from '../../core/services/windows-notification-listener.service';
+import { WindowsNotificationStateService } from '../../core/services/windows-notification-state.service';
 
 @Component({
   selector: 'app-app-shell',
@@ -25,8 +26,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   private readonly inboxNavigation = inject(InboxNavigationService);
   private readonly desktopNotifications = inject(DesktopNotificationService);
   private readonly windowsNotifications = inject(WindowsNotificationListenerService);
-
-  private readonly knownWindowsNotificationIds = new Set<number>();
+  private readonly windowsNotificationState = inject(WindowsNotificationStateService);
 
   private unlistenClose?: () => void;
   private windowsNotificationTimer: ReturnType<typeof setInterval> | null = null;
@@ -70,17 +70,17 @@ export class AppShellComponent implements OnInit, OnDestroy {
       console.log('[WINDOWS] Notification access:', access);
 
       if (!access.allowed) {
-        console.warn('[WINDOWS] Notification access not allowed.');
+        this.systemLogs.add('WARNING', 'Windows notification access was not granted.');
         return;
       }
 
       const notifications = await this.windowsNotifications.getNotifications();
 
+      this.windowsNotificationState.initialize(notifications);
+
       console.log('[WINDOWS] Current notifications:', notifications);
 
       for (const notification of notifications) {
-        this.knownWindowsNotificationIds.add(notification.id);
-
         console.log(
           '[WINDOWS]',
           notification.appName,
@@ -101,7 +101,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
       this.systemLogs.add('CORE', 'Windows notification watcher started.');
     } catch (error) {
-      console.error('[WINDOWS] Notification listener failed:', error);
+      console.error('[WINDOWS] Notification watcher failed:', error);
       this.systemLogs.add('ERROR', 'Windows notification watcher failed to start.');
     }
   }
@@ -111,11 +111,11 @@ export class AppShellComponent implements OnInit, OnDestroy {
       const notifications = await this.windowsNotifications.getNotifications();
 
       for (const notification of notifications) {
-        if (this.knownWindowsNotificationIds.has(notification.id)) {
+        const added = this.windowsNotificationState.add(notification);
+
+        if (!added) {
           continue;
         }
-
-        this.knownWindowsNotificationIds.add(notification.id);
 
         console.log(
           '[WINDOWS NEW]',
@@ -146,6 +146,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
       this.windowsNotificationTimer = null;
     }
 
-    this.knownWindowsNotificationIds.clear();
+    this.windowsNotificationState.clear();
   }
 }

@@ -66,6 +66,7 @@ pub fn run() {
             set_unread_count,
             windows_notifications::request_windows_notification_access,
             windows_notifications::get_windows_notifications,
+            windows_notifications::remove_windows_notification,
         ])
         .setup(|app| {
             #[cfg(desktop)]

@@ -107,6 +107,7 @@ pub fn get_windows_notifications() -> Result<Vec<WindowsNotification>, String> {
                                     if let Ok(text_element) = text_elements.GetAt(text_index) {
                                         if let Ok(text) = text_element.Text() {
                                             let value = text.to_string().trim().to_string();
+
                                             if !value.is_empty() {
                                                 text_lines.push(value);
                                             }
@@ -141,4 +142,16 @@ pub fn get_windows_notifications() -> Result<Vec<WindowsNotification>, String> {
     }
 
     Ok(results)
+}
+
+#[tauri::command]
+pub fn remove_windows_notification(id: u32) -> Result<(), String> {
+    let listener = UserNotificationListener::Current()
+        .map_err(|error| format!("Unable to get Windows notification listener: {error}"))?;
+
+    listener
+        .RemoveNotification(id)
+        .map_err(|error| format!("Unable to remove Windows notification: {error}"))?;
+
+    Ok(())
 }

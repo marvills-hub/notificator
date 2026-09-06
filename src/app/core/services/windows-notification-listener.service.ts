@@ -39,4 +39,14 @@ export class WindowsNotificationListenerService {
 
     return invoke<WindowsNotificationItem[]>('get_windows_notifications');
   }
+
+  async removeNotification(id: number): Promise<void> {
+    if (!this.platform.isTauri) {
+      return;
+    }
+
+    await invoke('remove_windows_notification', {
+      id,
+    });
+  }
 }

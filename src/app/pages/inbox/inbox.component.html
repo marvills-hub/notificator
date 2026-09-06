@@ -5,12 +5,6 @@
       <strong>Loading inbox</strong>
       <span>Restoring connected accounts and messages...</span>
     </div>
-  } @else if (!connected()) {
-    <div class="inbox-state">
-      <div class="state-icon">✉</div>
-      <strong>No email account connected</strong>
-      <span>Connect Gmail from Accounts to start receiving messages.</span>
-    </div>
   } @else {
     <div class="inbox-topbar">
       <div class="inbox-title">
@@ -22,7 +16,7 @@
           <span class="search-icon">⌕</span>
           <input
             type="search"
-            placeholder="Search messages..."
+            placeholder="Search messages and notifications..."
             [value]="searchTerm()"
             (input)="setSearchTerm($any($event.target).value)"
           />
@@ -87,13 +81,13 @@
       <div class="inbox-state compact">
         <div class="state-loader"></div>
         <strong>Loading messages</strong>
-        <span>Fetching your latest Gmail messages...</span>
+        <span>Fetching your latest notifications...</span>
       </div>
     } @else if (filteredMessages().length === 0) {
       <div class="inbox-state compact">
         <div class="state-icon">⌕</div>
-        <strong>No messages found</strong>
-        <span>No messages match your current search or filter.</span>
+        <strong>No notifications found</strong>
+        <span>No items match your current search or filter.</span>
       </div>
     } @else {
       <div class="inbox-workspace">
@@ -110,13 +104,17 @@
             >
               <span class="message-marker"></span>
               <div class="sender-avatar">
-                {{ (message.senderName || message.senderAddress).charAt(0).toUpperCase() }}
+                {{ getSenderLabel(message).charAt(0).toUpperCase() }}
               </div>
               <div class="message-content">
                 <div class="message-top">
                   <div class="sender">
-                    <strong>{{ message.senderName || message.senderAddress }}</strong>
-                    <span>{{ message.senderAddress }}</span>
+                    <strong>{{ getSenderLabel(message) }}</strong>
+                    @if (message.senderAddress) {
+                      <span>{{ message.senderAddress }}</span>
+                    } @else {
+                      <span>{{ message.sourceName }}</span>
+                    }
                   </div>
                   <div class="message-badges">
                     @if (!message.isRead) {
@@ -131,12 +129,12 @@
                   </div>
                 </div>
                 <div class="message-subject-row">
-                  <strong>{{ message.subject || '(No subject)' }}</strong>
-                  <span class="message-preview">{{ message.snippet }}</span>
+                  <strong>{{ message.title || '(No title)' }}</strong>
+                  <span class="message-preview">{{ message.preview }}</span>
                 </div>
               </div>
               <div class="message-meta">
-                <span>Gmail</span>
+                <span>{{ getProviderLabel(message) }}</span>
                 <time>{{ formatReceivedAt(message.receivedAt) }}</time>
               </div>
             </article>
@@ -153,8 +151,8 @@
             >
               <div class="detail-header">
                 <div class="detail-title">
-                  <span>GMAIL</span>
-                  <h2 id="messageDialogTitle">{{ message.subject || '(No subject)' }}</h2>
+                  <span>{{ getProviderLabel(message) }}</span>
+                  <h2 id="messageDialogTitle">{{ message.title || '(No title)' }}</h2>
                 </div>
                 <button
                   type="button"
@@ -168,11 +166,11 @@
               <div class="message-dialog-content">
                 <div class="detail-sender">
                   <div class="detail-avatar">
-                    {{ (message.senderName || message.senderAddress).charAt(0).toUpperCase() }}
+                    {{ getSenderLabel(message).charAt(0).toUpperCase() }}
                   </div>
                   <div class="detail-sender-copy">
-                    <strong>{{ message.senderName || message.senderAddress }}</strong>
-                    <span>{{ message.senderAddress }}</span>
+                    <strong>{{ getSenderLabel(message) }}</strong>
+                    <span>{{ message.senderAddress || message.sourceName }}</span>
                   </div>
                   <div class="detail-time">{{ formatReceivedAt(message.receivedAt) }}</div>
                 </div>
@@ -186,21 +184,44 @@
                   }
                 </div>
                 <div class="detail-body">
-                  <span>Message Preview</span>
-                  <p>{{ message.snippet || 'No message preview is available.' }}</p>
+                  <span>Notification Preview</span>
+                  <p>{{ message.preview || 'No preview is available.' }}</p>
                 </div>
                 <div class="detail-actions">
-                  <button
-                    type="button"
-                    class="detail-action primary"
-                    (click)="openInGmail(message.id)"
-                  >
-                    Open in Gmail
-                  </button>
-                  <button type="button" class="detail-action" disabled>Mark Read</button>
+                  @if (message.provider === 'gmail') {
+                    <button
+                      type="button"
+                      class="detail-action primary"
+                      (click)="openMessage(message)"
+                    >
+                      Open in Gmail
+                    </button>
+                  }
+                  @if (message.provider === 'windows') {
+                    <button
+                      type="button"
+                      class="detail-action"
+                      [disabled]="message.isRead"
+                      (click)="markRead(message)"
+                    >
+                      {{ message.isRead ? 'Read' : 'Mark Read' }}
+                    </button>
+
+                    <button type="button" class="detail-action" (click)="dismissMessage(message)">
+                      Dismiss
+                    </button>
+                  } @else {
+                    <button type="button" class="detail-action" disabled>Mark Read</button>
+                  }
                   <button type="button" class="detail-action" disabled>Star</button>
                 </div>
-                <div class="detail-notice">Gmail actions require upgraded Gmail permissions.</div>
+                @if (message.provider === 'gmail') {
+                  <div class="detail-notice">Gmail actions require upgraded Gmail permissions.</div>
+                } @else {
+                  <div class="detail-notice">
+                    This notification was captured from Windows Notification Center.
+                  </div>
+                }
               </div>
             </section>
           </div>
